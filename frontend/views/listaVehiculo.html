@@ -1,0 +1,72 @@
+//<script type="text/jsx">
+
+    let creado;
+    function listaVehiculo() {
+    
+        const [dataSource, setdataSource] = useState([])
+    
+        useEffect(listar, [])
+    
+        const history = useHistory()
+    
+        function User() {
+            google.script.run.withSuccessHandler(res => {
+                creado = (res)
+          }).perfil();
+        } 
+    
+        function listar() {
+            let kfalta = 0;
+            User()
+            google.script.run.withSuccessHandler(res => {
+                const respuest = JSON.parse(res);          
+                let arreglo = [];
+                respuest.map(data => {
+                    kfalta = data.proximoservicio - data.km
+                    arreglo.push({...data, kfalta})
+                }) 
+                setdataSource(arreglo)
+               }).listarVEH();
+        }    
+    
+        const handCheck = (vehiculo) => {
+            history.push("/listaMantEme1/" + vehiculo)
+        }
+        
+        return (
+            <div className="container-sm rounded shadow" style={{"marginTop": '7rem'}}>
+                <div className="row g-2">
+                    <div className="col">
+                        <div className="input-group input-group-sm mb-3">
+                            <span className="input-group-text">Usuario</span>
+                            <span className="form-control">{creado}</span>
+                        </div>
+                    </div>
+                </div>
+                <table className="table table-striped mb-2">
+                    <thead>
+                        <tr>
+                            <th scope="ID">Vehiculo</th>
+                            <th scope="col">KM Actual</th>
+                            <th scope="col">Próximo Servicio</th>
+                            <th scope="col">KM Restante</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {dataSource.map((datos) => ( 
+                        <tr key={datos.key}>
+                            <td scope="row">{datos.vehiculo}</td>
+                            <td scope="row">{datos.km}</td>
+                            <td>{datos.proximoservicio}</td>
+                            <td>{datos.kfalta}</td>
+                            <td><button className="btn bg-success btn-sm text-white" onClick={() => {handCheck(datos.vehiculo)}}>Ver</button></td>
+                        </tr>
+                        ))}
+                    </tbody>
+              </table>
+            </div>
+        )
+    }
+    
+    //</script>

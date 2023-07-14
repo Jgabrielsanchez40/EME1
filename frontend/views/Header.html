@@ -1,0 +1,20 @@
+//<script type="text/jsx">
+
+    function Header() {
+      return (
+        <div>
+          <nav className="navbar navbar-expand-lg bg-body-secondary fixed-top">
+            <div className="container-fluid">
+                <span className="p-2 badge bg-dark text-white" style={{fontSize: '1.2rem'}}>EME1 - Liviano</span>
+                <div className="p-3">
+                  <NavLink exact activeClassName="bg-success" className="navbar-brand badge bg-primary text-white p-2 mt-2" style={{fontSize: '1rem'}} to="/"> Carga EME1 </NavLink>
+                  <NavLink exact activeClassName="bg-success" className="navbar-brand badge bg-primary text-white p-2 mt-2" style={{fontSize: '1rem'}} to="/listaEme1"> Mis Solicitudes </NavLink>
+                  <NavLink exact activeClassName="bg-success" className="navbar-brand badge bg-primary text-white p-2 mt-2" style={{fontSize: '1rem'}} to="/listaVehiculo"> Estado Vehiculos </NavLink>
+              </div>
+            </div>
+          </nav>
+        </div>
+      )
+    }
+    
+// </script>

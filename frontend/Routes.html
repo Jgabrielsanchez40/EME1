@@ -1,0 +1,18 @@
+//<script type="text/jsx">
+
+function Routes() {
+    return(
+        <Router>
+            <Header />
+            <Redirect to="/"/>
+            <Switch>
+                <Route exact path="/" component={formEme1} />
+                <Route exact path="/listaEme1" component={listaEme1} />
+                <Route exact path="/listaFalla/:id?" component={listaFalla} />
+                <Route exact path="/listaVehiculo/" component={listaVehiculo} />
+                <Route exact path="/listaMantEme1/:vehiculo?" component={listaMantEme1} />
+            </Switch>
+        </Router>
+    );
+}
+//</script>

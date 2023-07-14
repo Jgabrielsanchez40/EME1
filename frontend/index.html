@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GV</title>
+    <?!= include('frontend/config/cd')?>
+    <title>EME1-LIV</title>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+    <components style="display: none;">
+        <?!= include('frontend/config/constCd')?>
+        <?!= include('frontend/views/Header')?>
+        <?!= include('frontend/Routes')?>
+        <?!= include('frontend/notificacion')?>
+
+        <?!= include('frontend/views/formEme1')?>
+        <?!= include('frontend/views/listaEme1')?>
+        <?!= include('frontend/views/listaFalla')?>
+        <?!= include('frontend/views/listaVehiculo')?>
+        <?!= include('frontend/views/listaMantEme1')?>
+
+        <?!= include('frontend/App')?>
+    </components>
+</html>

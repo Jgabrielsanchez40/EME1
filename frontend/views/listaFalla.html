@@ -1,0 +1,55 @@
+//<script type="text/jsx">
+
+let dato;
+const listaFalla = () => {
+
+    const { id } = useParams();
+    const history = useHistory()
+    const [data, setData] = useState([])
+
+    useEffect(listar, [])
+
+    function listar() {
+        google.script.run.withSuccessHandler(res => {
+            const respuest = JSON.parse(res);          
+            let arreglo = [];
+            respuest.map(data => {
+                if(data.id === id) 
+                arreglo.push({...data})
+            }) 
+            setData(arreglo)
+        }).listarFalla();
+    }
+
+    function back() {
+        if(id) { history.push("/listaEme1"); console.log(id) }
+        else if(!id) {history.push("/listaMantEme1")}
+    }
+
+    return (
+        <div className="container-sm rounded shadow" style={{"marginTop": '7rem'}}>
+            <table className="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="ID">ID</th>
+                        <th scope="Fecha Creado">Inspección A</th>
+                        <th scope="col">Detalle Falla</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {data.map((datos) => ( 
+                    <tr key={datos.key}>
+                        <td scope="row" >{datos.id}</td>
+                        <td scope="row" >{datos.IVehiculo}</td>
+                        <td scope="row">{datos.DetalleFalla}</td>
+                        
+                    </tr>
+                    ))}
+                </tbody>
+          </table>
+          <button className='btn btn-primary btn-block mb-2' onClick={()=> {back()}}>Regresar</button>
+        </div>
+    )
+}
+
+//</script>

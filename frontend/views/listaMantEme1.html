@@ -1,0 +1,80 @@
+//<script type="text/jsx">
+
+let creado;
+function listaMantEme1() {
+
+    const [dataSource, setdataSource] = useState([])
+
+    const { vehiculo } = useParams()
+
+    useEffect(listar, [])
+
+    const history = useHistory()
+
+    function User() {
+        google.script.run.withSuccessHandler(res => {
+            creado = (res)
+      }).perfil();
+    } 
+
+    function listar() {
+        User()
+        google.script.run.withSuccessHandler(res => {
+            const respuest = JSON.parse(res);          
+            let arreglo = [];
+            respuest
+                .sort((a, b) =>  b.fechaCreado - a.fechaCreado )
+                .map(data => {
+                if(data.vehiculo === vehiculo)
+                arreglo.push({...data})
+            }) 
+            setdataSource(arreglo)
+           }).listarEME1();
+    }    
+
+    const handCheck = (id) => {
+        history.push("/listaFalla/" + id)
+    }
+    
+    return (
+        <div className="container-sm rounded shadow" style={{"marginTop": '7rem'}}>
+            <table className="table table-striped mb-2">
+                <thead>
+                    <tr>
+                        <th scope="ID">ID</th>
+                        <th scope="Fecha Creado">Fecha Creado</th>
+                        <th scope="col">Empresa</th>
+                        <th scope="col">Departamento</th>
+                        <th scope="col">Vehiculo</th>
+                        <th scope="col">KM</th>
+                        <th scope="col">Lugar Inspección</th>
+                        <th scope="col">Combustible</th>
+                        <th scope="col">Observación</th>
+                        <th scope="col">Vehiculo Apto</th>
+                        <th scope="col">Ver Fallas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {dataSource
+                        .map((datos) => ( 
+                    <tr key={datos.id}>
+                        <td scope="row" >{datos.id}</td>
+                        <td scope="row">{dayjs(datos.fechaCreado).format("DD/MM/YYYY")}</td>
+                        <td scope="row">{datos.empresa}</td>
+                        <td>{datos.departamento}</td>
+                        <td>{datos.vehiculo}</td>
+                        <td>{datos.km}</td>
+                        <td>{datos.lugarInspeccion}</td>
+                        <td>{datos.combustible}</td>
+                        <td>{datos.observacion}</td>
+                        <td>{datos.vehiculoApto}</td>
+                        <td><button className="btn bg-success btn-sm text-white" onClick={() => {handCheck(datos.id)}}>Ver</button></td>
+                    </tr>
+                    ))}
+                </tbody>
+          </table>
+        </div>
+    )
+}
+
+//</script>
