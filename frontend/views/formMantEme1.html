@@ -1,0 +1,148 @@
+//<script type="text/jsx">
+
+    var creadoPor;
+    let km, kmNext, costo, detalle;
+
+    const formMantEme1 = () => {
+        const fechaservicio = new Date().toLocaleString() + " ";
+        const { vehiculo } = useParams()
+        const [valor, setValor] = useState()
+        const [dataSource, setdataSource] = useState([])
+        useEffect(listar, [])
+    
+        async function User() {
+            await google.script.run.withSuccessHandler(res => {
+                creadoPor = (res)
+            }).perfil();
+        }
+    
+        const checkData = (e) => {
+            if(e.target.name === "km") {
+                km = e.target.value;
+                kmNext = Math.floor(parseInt(km) + 5000);
+                setValor(kmNext);
+            } else if(e.target.name === "costo") {
+                costo = e.target.value;
+            } else if(e.target.name === "detalle") detalle = e.target.value;
+        }
+
+        const saveData = (e) => {
+            e.preventDefault()
+            const key = v4();
+            notificacionGuardando("Guardando Reporte Mantenimiento");
+            saveKM()
+            google.script.run.withSuccessHandler(resp => {
+                e.target.reset();
+                notificacionTareaTerminada(resp.titulo, resp.descripcion);
+            }).saveMANT({key, fechaservicio, creadoPor, vehiculo, km, costo, detalle});
+        }
+    
+        const saveKM = () => {
+            google.script.run.withSuccessHandler(resp => {
+             
+            }).updateKM(vehiculo, km, kmNext);
+        }
+    
+        async function listar() {
+            User()
+            await google.script.run.withSuccessHandler(res => {
+                const respuest = JSON.parse(res);          
+                let arreglo = [];
+                respuest
+                .sort((a, b) =>  b.fechaCreado > a.fechaCreado ? 1 : -1)
+                .map(data => {
+                    if(data.vehiculo === vehiculo)
+                    arreglo.push({...data})
+                }) 
+                setdataSource(arreglo)
+               }).listarVEHmant();
+        } 
+    
+        return (
+            <div className="container-sm" style={{"marginTop": '2rem'}}>
+                <div className="row g-2">
+                    <div className="col">
+                        <div className="input-group input-group-sm mb-3">
+                            <span className="input-group-text">Creado Por</span>
+                            <span className="form-control" locale="es" >{creadoPor}</span>
+                        </div>
+                    </div>
+                    
+                </div>
+                <form className="needs-validation" onSubmit={saveData}>
+                    <div className="card shadow bg-body-tertiary rounded mb-3">
+                        <div className="card-header bg-secondary text-white">Registro de Mantenimiento</div>
+                        <div className="card-body">
+                            <div className="row g-2">
+                                <div className="col">
+                                    <div className="input-group input-group-sm mb-3">
+                                        <span className="input-group-text">Vehiculo</span>
+                                        <span className="form-control">{vehiculo}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="row g-2">
+                                <div className="col">
+                                    <div className="input-group input-group-sm mb-3">
+                                        <span className="input-group-text">KM Actual</span>
+                                        <input type="text" className="form-control" name="km" onChange={checkData} required></input>
+                                    </div>
+                                </div>
+                                <div className="col">
+                                    <div className="input-group input-group-sm mb-3">
+                                        <span className="input-group-text">KM Proximo Servicio</span>
+                                        <span className="form-control">{valor}</span>
+                                    </div>
+                                </div>
+                              
+                            </div>
+                            <div className="row g-2">
+                                <div className="col">
+                                    <div className="input-group input-group-sm mb-3">
+                                        <span className="input-group-text">Detalle</span>
+                                        <textarea className="form-control" name="detalle" required  onChange={checkData}></textarea>
+                                    </div>
+                                </div>
+                                <div className="col">
+                                    <div className="input-group input-group-sm mb-3">
+                                        <span className="input-group-text">Costo $</span>
+                                        <input type="text" name="costo" className="form-control" onChange={checkData} required></input>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col">
+                        <button className='btn btn-primary btn-block mb-2'>Registrar</button>
+                    </div>
+                </form>
+                <div className="mt-4">
+                    <p className="fs-6 p-2 bg-light border-start">Lista de Servicio</p>
+                        <table className="table table-striped mb-2">
+                            <thead>
+                                <tr>
+                                    <th scope="ID">Fecha Servicio</th>
+                                    <th scope="col">Creado Por</th>
+                                    <th scope="col">KM</th>
+                                    <th scope="col">Detalle</th>
+                                    <th scope="col">Costo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {dataSource.map((datos) => ( 
+                                <tr key={datos.key}>
+                                    <td scope="row">{dayjs(datos.fechaservicio).format("DD/MM/YYYY")}</td>
+                                    <td scope="row">{datos.creadorPor}</td>
+                                    <td>{datos.km}</td>
+                                    <td scope="row">{datos.detalle}</td>
+                                    <td>{datos.costo}</td>
+                                </tr>
+                                ))}
+                            </tbody> 
+                    </table>
+                </div>
+            </div>
+        )
+    }
+    
+    //</script>

@@ -9,19 +9,19 @@ function listaEme1() {
 
     const history = useHistory()
 
-    function User() {
-        google.script.run.withSuccessHandler(res => {
+    async function User() {
+        await google.script.run.withSuccessHandler(res => {
             creado = (res)
       }).perfil();
     } 
 
-    function listar() {
+    async function listar() {
         User()
-        google.script.run.withSuccessHandler(res => {
+        await google.script.run.withSuccessHandler(res => {
             const respuest = JSON.parse(res);          
             let arreglo = [];
             respuest
-                .sort((a, b) =>  b.fechaCreado - a.fechaCreado )
+                .sort((a, b) =>  b.fechaCreado > a.fechaCreado ? 1 : -1)
                 .map(data => {
                 if(data.creadoPor === creado)
                 arreglo.push({...data})
@@ -35,7 +35,7 @@ function listaEme1() {
     }
     
     return (
-        <div className="container-sm rounded shadow" style={{"marginTop": '7rem'}}>
+        <div className="container-sm rounded shadow" style={{"marginTop": '2rem'}}>
             <table className="table table-striped mb-2">
                 <thead>
                     <tr>
@@ -68,7 +68,7 @@ function listaEme1() {
                         <td>{datos.vehiculoApto}</td>
                         <td><button className="btn bg-success btn-sm text-white" onClick={() => {handCheck(datos.id)}}>Ver</button></td>
                     </tr>
-                    ))}
+                    )).sort((b, a) =>  b.fechaCreado - a.fechaCreado )}
                 </tbody>
           </table>
         </div>

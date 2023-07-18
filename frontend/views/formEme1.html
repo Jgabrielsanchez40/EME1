@@ -64,35 +64,39 @@ const formEme1 = () => {
         if(e.target.value === "Documentos Vehiculos" || e.target.value === "Carnet de Circulacion Original" || e.target.value === "Responsabilidad Civil (RCV)" || e.target.value === "Trimestres" || e.target.value === "Placa Delantera y Trasera") { ivahideDocVeh = false; IVehiculo = "Documentos Vehiculos"; DetalleFalla = e.target.value;} else ivahideDocVeh = true;
     }
 
-    const saveFalla = () => {
+    const saveFalla = async () => {
         const key = v4()
-        google.script.run.withSuccessHandler(resp => {
+        await google.script.run.withSuccessHandler(resp => {
             setCarga(true)
         }).saveFalla({ key, id, IVehiculo, DetalleFalla})
     }
 
-    const saveData = (e) => {
+    const saveData = async (e) => {
         e.preventDefault()
-        notificacionGuardando("Guardando Usuario");
+        notificacionGuardando("Guardando EME1");
         saveKM()
-        google.script.run.withSuccessHandler(resp => {
+        await google.script.run.withSuccessHandler(resp => {
             e.target.reset();
             notificacionTareaTerminada(resp.titulo, resp.descripcion);
-            //updateKM(...values);
         }).saveEME1(JSON.stringify({ id, fechaCreado, creadoPor, ...values } ));
     }
 
-    const saveKM = () => {
-        google.script.run.withSuccessHandler(resp => {
-            console.log(resp)
+     const saveKM = async () => {
+        await google.script.run.withSuccessHandler(resp => {
+         
         }).updateKM(values.vehiculo, values.km);
+    }
+
+    const bcolor = () => {
+        if(carga === true) return ('#0d6efd')
+        else if(carga === false) return ('#ffc107')
     }
 
 
     return (
-        <div className="container-sm" style={{"marginTop": '7rem'}}>
+        <div className="container-sm" style={{"marginTop": '2rem'}}>
             <div className="row g-2">
-                <div className="col">
+                <div className="col-4">
                     <div className="input-group input-group-sm mb-3">
                         <span className="input-group-text">ID</span>
                         <span className="form-control" locale="es" >{id}</span>
@@ -105,7 +109,7 @@ const formEme1 = () => {
                     <div className="card-header bg-secondary text-white">Datos Generales</div>
                     <div className="card-body">
                         <div className="row g-2">
-                            <div className="col">
+                            <div className="col-8">
                                 <div className="input-group input-group-sm mb-3">
                                     <span className="input-group-text">Fecha Creado</span>
                                     <span className="form-control" locale="es" >{fechaCreado}</span>
@@ -191,7 +195,7 @@ const formEme1 = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="col">
+                            <div className="col-6">
                                 <div className="input-group input-group-sm mb-3">
                                     <span className="input-group-text">KM Actual</span>
                                     <input type="text" className="form-control" name="km" onChange={checkData} required></input>
@@ -199,7 +203,7 @@ const formEme1 = () => {
                             </div>
                         </div>
                         <div className="row g-2">
-                            <div className="col">
+                            <div className="col-10">
                             <div className="input-group input-group-sm mb-3">
                                 <span className="input-group-text">Lugar Inspección</span>
                                 <input type="text" className="form-control" name="lugarInspeccion" onChange={checkData} required></input>
@@ -212,9 +216,9 @@ const formEme1 = () => {
                                     <select className="form-select form-select-sm" name="combustible" required onChange={checkData}>
                                         <option value=" "> </option>
                                         <option value="Full">Full</option>
-                                        <option value="1/4">1/4</option>
-                                        <option value="1/2">1/2</option>
-                                        <option value="3/4">3/4</option>
+                                        <option value="1 / 4">1/4</option>
+                                        <option value="1 / 2">1/2</option>
+                                        <option value="3 / 4">3/4</option>
                                     </select>
                             </div>
                             </div>
@@ -283,7 +287,7 @@ const formEme1 = () => {
                                 </select>
                             </div>
                             <div className="col">
-                                <button className='btn btn-primary btn-block btn-sm' onClick={() => {setCarga(false); saveFalla()}}>{carga ? "Cargar Falla" : "Salvando"}</button></div>
+                                <button className='btn btn-block btn-sm text-white' style={{"backgroundColor": bcolor()}} onClick={() => {setCarga(false); saveFalla()}}>{carga ? "Cargar Falla" : "Salvando"}</button></div>
                         </div>
                     </div>
                 </div>
@@ -347,7 +351,7 @@ const formEme1 = () => {
                                 </select>
                             </div>
                             <div className="col">
-                                <button className='btn btn-primary btn-block btn-sm' onClick={() => {setCarga(false); saveFalla()}}>{carga ? "Cargar Falla" : "Salvando"}</button></div>
+                                <button className='btn btn-block btn-sm text-white' style={{"backgroundColor": bcolor()}} onClick={() => {setCarga(false); saveFalla()}}>{carga ? "Cargar Falla" : "Salvando"}</button></div>
                         </div>
                     </div>
                 </div>
@@ -356,7 +360,7 @@ const formEme1 = () => {
                     <div className="card-header bg-secondary text-white">Comentario Adicional, Vehiculo Apto</div>
                     <div className="card-body">
                         <div className="row g-2">
-                            <div className="col">
+                            <div className="col-10">
                                 <div className="input-group input-group-sm mb-3">
                                     <span className="input-group-text">Observaciones</span>
                                     <textarea className="form-control" name="observacion" onChange={checkData}></textarea>
@@ -364,7 +368,7 @@ const formEme1 = () => {
                             </div>
                             <div className="col">
                                 <div className="input-group input-group-sm mb-3">
-                                    <span className="input-group-text">Vehiculo Apto Para Uso</span>
+                                    <span className="input-group-text">Apto Para Uso</span>
                                     <div className="ms-2 bg-white border rounded">
                                         <div className="form-check form-check-inline">
                                             <input className="form-check-input" type="radio" value="SI" name="vehiculoApto" onChange={checkData} required></input>

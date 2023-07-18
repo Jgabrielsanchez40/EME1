@@ -9,13 +9,13 @@ const listaFalla = () => {
 
     useEffect(listar, [])
 
-    function listar() {
-        google.script.run.withSuccessHandler(res => {
+    async function listar()  {
+       await google.script.run.withSuccessHandler(res => {
             const respuest = JSON.parse(res);          
             let arreglo = [];
             respuest.map(data => {
                 if(data.id === id) 
-                arreglo.push({...data})
+                 arreglo.push({...data})
             }) 
             setData(arreglo)
         }).listarFalla();
@@ -27,7 +27,7 @@ const listaFalla = () => {
     }
 
     return (
-        <div className="container-sm rounded shadow" style={{"marginTop": '7rem'}}>
+        <div className="container-sm rounded shadow" style={{"marginTop": '2rem'}}>
             <table className="table table-striped">
                 <thead>
                     <tr>

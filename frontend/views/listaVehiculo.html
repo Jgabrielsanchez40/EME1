@@ -1,10 +1,8 @@
 //<script type="text/jsx">
 
-    let creado;
+    let creado
     function listaVehiculo() {
-    
         const [dataSource, setdataSource] = useState([])
-    
         useEffect(listar, [])
     
         const history = useHistory()
@@ -22,7 +20,7 @@
                 const respuest = JSON.parse(res);          
                 let arreglo = [];
                 respuest.map(data => {
-                    kfalta = data.proximoservicio - data.km
+                    kfalta = parseInt(data.kmNext - data.km)
                     arreglo.push({...data, kfalta})
                 }) 
                 setdataSource(arreglo)
@@ -32,9 +30,19 @@
         const handCheck = (vehiculo) => {
             history.push("/listaMantEme1/" + vehiculo)
         }
+
+        const handMant = (vehiculo) => {
+            history.push("/formMantEme1/" + vehiculo)
+        }
+
+        const bcolor = (kfalta) => {
+            if(kfalta <= 500) return ('#dc3545')
+            else if(kfalta > 500 && kfalta <= 1500) return ('#ffc107')
+            else if(kfalta > 1500) return ('#198754')
+        }
         
         return (
-            <div className="container-sm rounded shadow" style={{"marginTop": '7rem'}}>
+            <div className="container-sm rounded shadow" style={{"marginTop": '2rem'}}>
                 <div className="row g-2">
                     <div className="col">
                         <div className="input-group input-group-sm mb-3">
@@ -51,6 +59,8 @@
                             <th scope="col">Próximo Servicio</th>
                             <th scope="col">KM Restante</th>
                             <th scope="col">Acciones</th>
+                            <th scope="col">Mantenimiento</th>
+
                         </tr>
                     </thead>
                     <tbody>
@@ -58,9 +68,10 @@
                         <tr key={datos.key}>
                             <td scope="row">{datos.vehiculo}</td>
                             <td scope="row">{datos.km}</td>
-                            <td>{datos.proximoservicio}</td>
-                            <td>{datos.kfalta}</td>
+                            <td>{datos.kmNext}</td>
+                            <td><p className="btn btn-sm text-white" style={{"backgroundColor": bcolor(datos.kfalta)}} >{datos.kfalta}</p></td>
                             <td><button className="btn bg-success btn-sm text-white" onClick={() => {handCheck(datos.vehiculo)}}>Ver</button></td>
+                            <td><button className="btn bg-warning btn-sm text-black" onClick={() => {handMant(datos.vehiculo)}}>Mant</button></td>
                         </tr>
                         ))}
                     </tbody>
