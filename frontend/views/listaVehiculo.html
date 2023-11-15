@@ -1,30 +1,42 @@
 //<script type="text/jsx">
 
-    let creado
+    let creado, user;
     function listaVehiculo() {
         const [dataSource, setdataSource] = useState([])
-        useEffect(listar, [])
+         useEffect(User, [])
     
         const history = useHistory()
     
-        function User() {
-            google.script.run.withSuccessHandler(res => {
-                creado = (res)
+        async function User() {
+            await google.script.run.withSuccessHandler(res => {
+                creado = (res);
+                validarUser()
           }).perfil();
-        } 
+        }
+
+        async function validarUser() {
+           await google.script.run.withSuccessHandler(resp => {
+                 user = (resp)
+                 if(user === creado) listar()
+                 else return (
+                    <h1>No Acceso</h1>
+                 )
+            }).validarUser(creado)
+        }
     
-        function listar() {
+        async function listar() {
             let kfalta = 0;
-            User()
-            google.script.run.withSuccessHandler(res => {
-                const respuest = JSON.parse(res);          
-                let arreglo = [];
-                respuest.map(data => {
-                    kfalta = parseInt(data.kmNext - data.km)
-                    arreglo.push({...data, kfalta})
-                }) 
-                setdataSource(arreglo)
-               }).listarVEH();
+           // User()
+               await google.script.run.withSuccessHandler(res => {
+                    const respuest = JSON.parse(res);          
+                    let arreglo = [];
+                    respuest
+                        .map(data => {
+                            kfalta = parseInt(data.kmNext - data.km)
+                            arreglo.push({...data, kfalta})
+                    }) 
+                    setdataSource(arreglo)
+                   }).listarVEH();
         }    
     
         const handCheck = (vehiculo) => {
@@ -32,13 +44,28 @@
         }
 
         const handMant = (vehiculo) => {
-            history.push("/formMantEme1/" + vehiculo)
+            history.push("/formMantEme1/"  + vehiculo)
+        }
+
+        const handActivo = async (activo, key) => {
+            let cambio = " "
+            if(activo === 'Si') cambio = 'No'
+            else cambio = 'Si'
+            await google.script.run.withSuccessHandler(res => {
+                console.log(res)
+                listar()
+          }).updateActivo(key, cambio);
         }
 
         const bcolor = (kfalta) => {
             if(kfalta <= 500) return ('#dc3545')
             else if(kfalta > 500 && kfalta <= 1500) return ('#ffc107')
             else if(kfalta > 1500) return ('#198754')
+        }
+
+        const Activocolor = (color) => {
+            if(color === 'No') return ('#dc3545')
+            else if(color === 'Si') return ('#198754')
         }
         
         return (
@@ -50,6 +77,11 @@
                             <span className="form-control">{creado}</span>
                         </div>
                     </div>
+                    <div className="col">
+                        <div className="input-group input-group-sm mb-3">
+                            <a className="btn btn-outline-secondary" target="_blank" href="https://lookerstudio.google.com/reporting/986f5c70-4b88-45dd-9b82-407afec9e14c/page/kkAYD?s=qlIYuukcuZY">Report</a>
+                        </div>
+                    </div>
                 </div>
                 <table className="table table-striped mb-2">
                     <thead>
@@ -59,18 +91,24 @@
                             <th scope="col">Próximo Servicio</th>
                             <th scope="col">KM Restante</th>
                             <th scope="col">Acciones</th>
+                            <th scope="col">Cant. Fallas</th>
+                            <th scope="col">Operativo</th>
                             <th scope="col">Mantenimiento</th>
 
                         </tr>
                     </thead>
                     <tbody>
-                        {dataSource.map((datos) => ( 
+                        {dataSource
+                        .sort((a, b) => b.vehiculoa < a.vehiculo)
+                        .map((datos) => ( 
                         <tr key={datos.key}>
                             <td scope="row">{datos.vehiculo}</td>
                             <td scope="row">{datos.km}</td>
                             <td>{datos.kmNext}</td>
                             <td><p className="btn btn-sm text-white" style={{"backgroundColor": bcolor(datos.kfalta)}} >{datos.kfalta}</p></td>
                             <td><button className="btn bg-success btn-sm text-white" onClick={() => {handCheck(datos.vehiculo)}}>Ver</button></td>
+                            <td><p className="badge rounded-pill text-bg-info fs-6">{datos.qfallas > 0 ? datos.qfallas : "-" }</p></td>
+                            <td><button className="btn btn-sm text-white fs-6" style={{"backgroundColor": Activocolor(datos.Activo)}} onClick={() => { handActivo(datos.Activo, datos.key)}}>{datos.Activo === 'Si' ? '√' : "X" }</button></td>
                             <td><button className="btn bg-warning btn-sm text-black" onClick={() => {handMant(datos.vehiculo)}}>Mant</button></td>
                         </tr>
                         ))}

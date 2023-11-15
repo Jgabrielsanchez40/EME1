@@ -16,7 +16,7 @@ function listaEme1() {
     } 
 
     async function listar() {
-        User()
+        await User()
         await google.script.run.withSuccessHandler(res => {
             const respuest = JSON.parse(res);          
             let arreglo = [];

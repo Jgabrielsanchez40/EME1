@@ -1,4 +1,4 @@
-function _readVEH(sheet, vehiculo) {
+function _readVEH(sheet, Activo) {
     const data = sheet.getDataRange().getValues();
     const header = data.shift();
 
@@ -13,8 +13,8 @@ function _readVEH(sheet, vehiculo) {
         return reduced;
     });
 
-    if (vehiculo) {
-        return resultado.find((dato) => dato.vehiculo === vehiculo)
+    if (Activo) {
+        return resultado.filter((dato) => dato.Activo === Activo)
     }
     return resultado;
 }

@@ -1,9 +1,9 @@
 //<script type="text/jsx">
 
 var creadoPor;
-let numerofila;
+let numerofila, qfallas = 0;
 var id;
-var IVehiculo, DetalleFalla;
+var IVehiculo, DetalleFalla, vehiculoselect;
 
 let ivahideM = true;
 let ivahideD = true;
@@ -17,16 +17,22 @@ let ivahideTrans = true;
 let ivahideDocCo = true;
 let ivahideDocVeh = true;
 
-
 const formEme1 = () => {
     const fechaCreado = new Date().toLocaleString() + " ";
     useEffect(User)
 
+    useEffect(() => {
+        listarRecurso()
+    })
+
     const [values, setValues] = useState();
     const [fvalues, setFValues] = useState();
     const [carga, setCarga] = useState(true);
-    const [disa, setDisa] = useState(true) 
-
+    const [disa, setDisa] = useState(true)
+    const [fkm, setFkm] = useState();
+    const [revdisa, setRevdisa] = useState(true);
+    const [recurso, setRecurso] = useState([])
+ 
     function User() {
         google.script.run.withSuccessHandler(res => {
             creadoPor = (res)
@@ -38,19 +44,27 @@ const formEme1 = () => {
         google.script.run.withSuccessHandler(res => {
             numerofila = (res)
             id = "EME1-" + Math.floor(numerofila + 1)
+            //listarRecurso()
         }).cantRows()
     }
 
     const checkData = (e) => {
         const { name, value } = e.target;
         setValues({...values, [name]: value})
+        if(e.target.name === "vehiculo")  { vehiculoselect = e.target.value; kmFalta(vehiculoselect); setRevdisa(false)}
         if(e.target.name === "vehiculoApto") setDisa(false)
+    }
+
+    const kmFalta = async (vehiculoselect) => {
+        await google.script.run.withSuccessHandler(resp => {
+            setFkm(resp)
+        }).KMFalta(vehiculoselect)
     }
 
     const checkFalla = (e) => {
         const { name, value } = e.target;
         setFValues({...fvalues, [name]: value})
-
+    
         if(e.target.value === "Comportamiento Motor" || e.target.value === "Nivel de Aceite  de Motor/ Condiciones / Fugas" || e.target.value === "Radiador / Tapa /  Mangueras / Fugas" || e.target.value === "Envase y Nivel de Refrigerante / Fugas" || e.target.value === "Condicion Filtro de Aire / Carcaza / Ductos" || e.target.value === "Condicion Correas / Tensión y Ajuste" || e.target.value === "Nivel de Fluido de Frenos / Fugas") { ivahideM = false; IVehiculo = "Comportamiento Motor"; DetalleFalla = e.target.value; } else ivahideM = true;
         if(e.target.value === "Dirección" || e.target.value === "Envase / Tapa / Nivel de aceite hidráulico / Fugas" || e.target.value === "Mangueras y conexiones" ) { ivahideD = false; IVehiculo = "Dirección"; DetalleFalla = e.target.value; } else ivahideD = true;
         if(e.target.value === "Suspensión y Cauchos" || e.target.value === "Estado de cauchos y Presion de Aire" || e.target.value === "Tuercas Ajustadas y Completas" || e.target.value === "Amortiguadores / Espirales / Ballestas") { ivahidesc = false; IVehiculo = "Suspensión y Cauchos"; DetalleFalla = e.target.value;} else ivahidesc = true;
@@ -66,6 +80,7 @@ const formEme1 = () => {
 
     const saveFalla = async () => {
         const key = v4()
+        qfallas += 1;
         await google.script.run.withSuccessHandler(resp => {
             setCarga(true)
         }).saveFalla({ key, id, IVehiculo, DetalleFalla})
@@ -75,8 +90,10 @@ const formEme1 = () => {
         e.preventDefault()
         notificacionGuardando("Guardando EME1");
         saveKM()
+        //saveqfallas()
+        e.target.reset();
+         qfallas = 0;
         await google.script.run.withSuccessHandler(resp => {
-            e.target.reset();
             notificacionTareaTerminada(resp.titulo, resp.descripcion);
         }).saveEME1(JSON.stringify({ id, fechaCreado, creadoPor, ...values } ));
     }
@@ -84,14 +101,24 @@ const formEme1 = () => {
      const saveKM = async () => {
         await google.script.run.withSuccessHandler(resp => {
          
-        }).updateKM(values.vehiculo, values.km);
+        }).updateKMM1(values.vehiculo, values.km, qfallas);
     }
 
+    const listarRecurso = async () => {
+        await google.script.run.withSuccessHandler(res => {
+            const respuest = JSON.parse(res);
+            let arreglo = [];
+            respuest.map(data =>  { 
+                arreglo.push({...data})
+            })
+            setRecurso(arreglo)
+      }).listarRecursos('Si');
+    }
+    
     const bcolor = () => {
         if(carga === true) return ('#0d6efd')
         else if(carga === false) return ('#ffc107')
     }
-
 
     return (
         <div className="container-sm" style={{"marginTop": '2rem'}}>
@@ -178,27 +205,28 @@ const formEme1 = () => {
                         <div className="row g-2">
                             <div className="col">
                                 <div className="input-group input-group-sm mb-3">
-                                    <span className="input-group-text" >Vehiculo -Placa</span>
+                                    <span className="input-group-text" >Vehiculo - Placa</span>
                                     <div className="flex-sm justify-content-evenly">
-                                        <select className="form-select form-select-sm" name="vehiculo" required onChange={checkData}>
-                                            <option> </option>
-                                            <option value="A92BJ4P Kaicene">A92BJ4P Kaicene</option>
-                                            <option value="A91BJ7P Kaicene">A91BJ7P Kaicene</option>
-                                            <option value="A31DS9V Kaicene">A31DS9V Kaicene</option>
-                                            <option value="A42BC0H Kaicene">A42BC0H Kaicene</option>
-                                            <option value="A30AM8F Hilux">A30AM8F Hilux</option>
-                                            <option value="A35AC7R Hilux">A35AC7R Hilux</option>
-                                            <option value="A67AS6V LUV DMAX">A67AS6V LUV DMAX</option>
-                                            <option value="AM071VA Yaris">AM071VA Yaris</option>
-                                            <option value="SBI-62T Camry">SBI-62T Camry</option>
+                                        <select className="form-select form-select-sm" name="vehiculo" onChange={checkData}>
+                                            { recurso.map((data) =>  (
+                                            <option value={data.vehiculo} key={data.key}>{data.vehiculo}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
                             </div>
-                            <div className="col-6">
+                        </div>
+                        <div className="row g-2">
+                            <div className="col-4">
                                 <div className="input-group input-group-sm mb-3">
                                     <span className="input-group-text">KM Actual</span>
-                                    <input type="text" className="form-control" name="km" onChange={checkData} required></input>
+                                    <input type="number" className="form-control" name="km" onChange={checkData} required></input>
+                                </div>
+                            </div>
+                            <div className="col-4">
+                                <div className="input-group input-group-sm mb-3">
+                                    <span className="input-group-text">KM para Servicio</span>
+                                    <span type="text" className="form-control" name="Ultimokm">{fkm}</span>
                                 </div>
                             </div>
                         </div>
@@ -226,13 +254,15 @@ const formEme1 = () => {
                         </div>
                     </div>
                 </div>
-            
+                <div className="card shadow bg-body-tertiary rounded mb-3">
+                    <div className="card-header bg-info">Cantidad de Fallas: {qfallas}</div>
+                </div>
                 <div className="card shadow bg-body-tertiary rounded mb-3">
                     <div className="card-header bg-secondary text-white">Inspección Vehiculo Apagado</div>
                     <div className="card-body">
                         <div className="row">
                             <div className="col">
-                                <select className="form-select form-select-sm mb-3" name="IvehiculoApagado" required onChange={checkFalla}>
+                                <select className="form-select form-select-sm mb-3" name="IvehiculoApagado" required onChange={checkFalla} disabled={revdisa}>
                                     <option value=" ">Revisar</option>
                                     <option value="Comportamiento Motor">Comportamiento Motor</option>
                                     <option value="Dirección">Dirección</option>
@@ -247,43 +277,43 @@ const formEme1 = () => {
                             <div className="col-sm-6 col-md-8">
                                 <select className="form-select form-select-sm mb-3" name="comportamientoMotor" hidden={ivahideM} onChange={checkFalla}>
                                     <option> </option>
-                                    <option value="Nivel de Aceite  de Motor/ Condiciones / Fugas">Nivel de Aceite  de Motor/ Condiciones / Fugas</option>
-                                    <option value="Radiador / Tapa /  Mangueras / Fugas">Radiador / Tapa /  Mangueras / Fugas</option>
-                                    <option value="Envase y Nivel de Refrigerante / Fugas">Envase y Nivel de Refrigerante / Fugas</option>
-                                    <option value="Condicion Filtro de Aire / Carcaza / Ductos">Condicion Filtro de Aire / Carcaza / Ductos</option>
-                                    <option value="Condicion Correas / Tensión y Ajuste">Condicion Correas / Tensión y Ajuste</option>
-                                    <option value="Nivel de Fluido de Frenos / Fugas">Nivel de Fluido de Frenos / Fugas</option>
+                                    <option value="Nivel de Aceite  de Motor/ Condiciones / Fugas">Falla en Nivel de Aceite  de Motor/ Condiciones / Fugas</option>
+                                    <option value="Radiador / Tapa /  Mangueras / Fugas">Falla en Radiador / Tapa /  Mangueras / Fugas</option>
+                                    <option value="Envase y Nivel de Refrigerante / Fugas">Falla en Envase y Nivel de Refrigerante / Fugas</option>
+                                    <option value="Condicion Filtro de Aire / Carcaza / Ductos">Falla en Condicion Filtro de Aire / Carcaza / Ductos</option>
+                                    <option value="Condicion Correas / Tensión y Ajuste">Falla en Condicion Correas / Tensión y Ajuste</option>
+                                    <option value="Nivel de Fluido de Frenos / Fugas">Falla en  Nivel de Fluido de Frenos / Fugas</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="direccion" hidden={ivahideD} onChange={checkFalla}>
                                     <option> </option>
-                                    <option value="Envase / Tapa / Nivel de aceite hidráulico / Fugas">Envase / Tapa / Nivel de aceite hidráulico / Fugas</option>
-                                    <option value="Mangueras y conexiones">Mangueras y conexiones</option>
+                                    <option value="Envase / Tapa / Nivel de aceite hidráulico / Fugas">Falla en Envase / Tapa / Nivel de aceite hidráulico / Fugas</option>
+                                    <option value="Mangueras y conexiones">Falla en Mangueras y conexiones</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="suspensionCauchos" hidden={ivahidesc} onChange={checkFalla}>
                                     <option> </option>
-                                    <option value="Estado de cauchos y Presion de Aire">Estado de cauchos y Presion de Aire</option>
-                                    <option value="Tuercas Ajustadas y Completas">Tuercas Ajustadas y Completas</option>
-                                    <option value="Amortiguadores / Espirales / Ballestas">Amortiguadores / Espirales / Ballestas</option>
+                                    <option value="Estado de cauchos y Presion de Aire">Falla en Estado de cauchos y Presion de Aire</option>
+                                    <option value="Tuercas Ajustadas y Completas">Falla en Tuercas Ajustadas y Completas</option>
+                                    <option value="Amortiguadores / Espirales / Ballestas">Falla en Amortiguadores / Espirales / Ballestas</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="carroceriaTapiceria" hidden={ivahidect} onChange={checkFalla}>
                                     <option> </option>
-                                    <option value="Faros y Micas Traseras / Delanteras">Faros y Micas Traseras / Delanteras</option>
-                                    <option value="Manillas/Cerraduras/Seguros de Puertas">Manillas/Cerraduras/Seguros de Puertas</option>
-                                    <option value="Vidrio Delantero/Trasero/Ventanas/Retrovisores">Vidrio Delantero/Trasero/Ventanas/Retrovisores</option>
-                                    <option value="Estado de Tablero / Asientos / Tapiceria de Techo">Estado de Tablero / Asientos / Tapiceria de Techo</option>
-                                    <option value="Estado de Piso / Alfombras / Felpudos">Estado de Piso / Alfombras / Felpudos</option>
-                                    <option value="Cinturones de seguridad/Repoza Cabezas/Air Bag">Cinturones de seguridad/Repoza Cabezas/Air Bag</option>
+                                    <option value="Faros y Micas Traseras / Delanteras">Falla en Faros y Micas Traseras / Delanteras</option>
+                                    <option value="Manillas/Cerraduras/Seguros de Puertas">Falla en Manillas/Cerraduras/Seguros de Puertas</option>
+                                    <option value="Vidrio Delantero/Trasero/Ventanas/Retrovisores">Falla en Vidrio Delantero/Trasero/Ventanas/Retrovisores</option>
+                                    <option value="Estado de Tablero / Asientos / Tapiceria de Techo">Falla en Estado de Tablero / Asientos / Tapiceria de Techo</option>
+                                    <option value="Estado de Piso / Alfombras / Felpudos">Falla en Estado de Piso / Alfombras / Felpudos</option>
+                                    <option value="Cinturones de seguridad/Repoza Cabezas/Air Bag">Falla en Cinturones de seguridad/Repoza Cabezas/Air Bag</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="herramientasSeguridad" hidden={ivahidesh} onChange={checkFalla}>
                                     <option> </option>
-                                    <option value="DrivePA">DrivePA</option>
-                                    <option value="Extintor / Triangulo de seguridad">Extintor / Triangulo de seguridad</option>
-                                    <option value="Gato / Llave de cruz / Linterna">Gato / Llave de cruz / Linterna</option>
-                                    <option value="Caucho de Repuesto">Caucho de Repuesto</option>
-                                    <option value="Kit De Primeros Auxilios">Kit De Primeros Auxilios</option>
-                                    <option value="Baranda Proteccion Contra Vuelcos">Baranda Proteccion Contra Vuelcos</option>
-                                    <option value="Objetos Sueltos Dentro del Vehiculo o Cajón">Objetos Sueltos Dentro del Vehiculo o Cajón</option>
-                                    <option value="Orden y Limpieza (Interna, Externa, Maletero)">Orden y Limpieza (Interna, Externa, Maletero)</option>
+                                    <option value="DrivePA">Falla en DrivePA</option>
+                                    <option value="Extintor / Triangulo de seguridad">Falta de Extintor / Triangulo de seguridad</option>
+                                    <option value="Gato / Llave de cruz / Linterna">Falla en Gato / Llave de cruz / Linterna</option>
+                                    <option value="Caucho de Repuesto">Falla en Caucho de Repuesto</option>
+                                    <option value="Kit De Primeros Auxilios">Falla en Kit De Primeros Auxilios</option>
+                                    <option value="Baranda Proteccion Contra Vuelcos">Falla en Baranda Proteccion Contra Vuelcos</option>
+                                    <option value="Objetos Sueltos Dentro del Vehiculo o Cajón">Falla en Objetos Sueltos Dentro del Vehiculo o Cajón</option>
+                                    <option value="Orden y Limpieza (Interna, Externa, Maletero)">Falla en Orden y Limpieza (Interna, Externa, Maletero)</option>
                                 </select>
                             </div>
                             <div className="col">
@@ -296,7 +326,7 @@ const formEme1 = () => {
                     <div className="card-body">
                         <div className="row">
                             <div className="col">
-                                <select className="form-select form-select-sm mb-3" name="IvehiculoEncendido" required onChange={checkFalla}>
+                                <select className="form-select form-select-sm mb-3" name="IvehiculoEncendido" required onChange={checkFalla} disabled={revdisa}>
                                     <option value=" ">Revisar</option>
                                     <option value="Frenos y Panel de Instrumentos">Frenos y Panel de Instrumentos</option>
                                     <option value="Electrico">Electrico</option>
@@ -311,43 +341,43 @@ const formEme1 = () => {
                             <div className="col-sm-6 col-md-8">
                                 <select className="form-select form-select-sm mb-3" name="frenosPanelInstrumento" hidden={ivahideFPI} onChange={checkFalla}>
                                     <option> </option>
-                                    <option value="Indicadores y Luces de Advertencia en el Tablero">Indicadores y Luces de Advertencia en el Tablero</option>
-                                    <option value="Velocimetro / Tacometro (RPM)">Velocimetro / Tacometro (RPM)</option>
-                                    <option value="Funcionamiento de pedal de freno">Funcionamiento de pedal de freno</option>
-                                    <option value="Funcionamiento frenos de Estacionamiento">Funcionamiento frenos de Estacionamiento</option>
+                                    <option value="Indicadores y Luces de Advertencia en el Tablero">Falla en Indicadores y Luces de Advertencia en el Tablero</option>
+                                    <option value="Velocimetro / Tacometro (RPM)">Falla en Velocimetro / Tacometro (RPM)</option>
+                                    <option value="Presiones de Aceite y Temperatura Motor">Falla en Presiones de Aceite y Temperatura Motor</option>
+                                    <option value="Funcionamiento frenos de Estacionamiento">Falla en Funcionamiento frenos de Estacionamiento</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="electrico" hidden={ivahideElec} onChange={checkFalla}>
                                     <option> </option>
-                                    <option value="Luces/Alta/Baja/Freno/Emenrgencia/Giro/Retroceso">Luces/Alta/Baja/Freno/Emenrgencia/Giro/Retroceso</option>
-                                    <option value="Luz Del Porta Placa Trasero / Tercer Stop">Luz Del Porta Placa Trasero / Tercer Stop</option>
-                                    <option value="Luces internas/Tablero/De techo/Maletero/Adicionales">Luces internas/Tablero/De techo/Maletero/Adicionales</option>
-                                    <option value="Alarma / Sirena / Control">Alarma / Sirena / Control</option>
-                                    <option value="Alarma de retroceso">Alarma de retroceso</option>
-                                    <option value="Limpia para brisas/Cepillos/Lava Para Brisas">Limpia para brisas/Cepillos/Lava Para Brisas</option>
-                                    <option value="Corneta / Bocina">Corneta / Bocina</option>
-                                    <option value="Condiciones de batería / Bornes / Cables">Condiciones de batería / Bornes / Cables</option>
-                                    <option value="Desplazamiento de ventanas eléctricas">Desplazamiento de ventanas eléctricas</option>
-                                    <option value="Aire Acondicionado/Filtro/Rejillas/Botones y Mandos">Aire Acondicionado/Filtro/Rejillas/Botones y Mandos</option>
-                                    <option value="Equipo de sonido y Cornetas o Bocinas de Audio">Equipo de sonido y Cornetas o Bocinas de Audio</option>
+                                    <option value="Luces/Alta/Baja/Freno/Emenrgencia/Giro/Retroceso">Falla en Luces/Alta/Baja/Freno/Emenrgencia/Giro/Retroceso</option>
+                                    <option value="Luz Del Porta Placa Trasero / Tercer Stop">Falla en Luz Del Porta Placa Trasero / Tercer Stop</option>
+                                    <option value="Luces internas/Tablero/De techo/Maletero/Adicionales">Falla en Luces internas/Tablero/De techo/Maletero/Adicionales</option>
+                                    <option value="Alarma / Sirena / Control">Falla en Alarma / Sirena / Control</option>
+                                    <option value="Alarma de retroceso">Falla en Alarma de retroceso</option>
+                                    <option value="Limpia para brisas/Cepillos/Lava Para Brisas">Falla en Limpia para brisas/Cepillos/Lava Para Brisas</option>
+                                    <option value="Corneta / Bocina">Falla en Corneta / Bocina</option>
+                                    <option value="Condiciones de batería / Bornes / Cables">Falla en Condiciones de batería / Bornes / Cables</option>
+                                    <option value="Desplazamiento de ventanas eléctricas">Falla en Desplazamiento de ventanas eléctricas</option>
+                                    <option value="Aire Acondicionado/Filtro/Rejillas/Botones y Mandos">Falla en Aire Acondicionado/Filtro/Rejillas/Botones y Mandos</option>
+                                    <option value="Equipo de sonido y Cornetas o Bocinas de Audio">Falla en Equipo de sonido y Cornetas o Bocinas de Audio</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="transmision" hidden={ivahideTrans} onChange={checkFalla}>
                                     <option> </option>
-                                    <option value="Nivel de fluido de transmisión / Fugas">Nivel de fluido de transmisión / Fugas</option>
-                                    <option value="Embrague Nivel de Fluido/Fugas/Recorrido/Aplicación">Embrague Nivel de Fluido/Fugas/Recorrido/Aplicación</option>
-                                    <option value="Palanca de cambios">Palanca de cambios</option>
+                                    <option value="Nivel de fluido de transmisión / Fugas">Falla en Nivel de fluido de transmisión / Fugas</option>
+                                    <option value="Embrague Nivel de Fluido/Fugas/Recorrido/Aplicación">Falla en Embrague Nivel de Fluido/Fugas/Recorrido/Aplicación</option>
+                                    <option value="Palanca de cambios">Falla en Palanca de cambios</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="documentosConductor" hidden={ivahideDocCo} onChange={checkFalla}>
                                     <option> </option>
-                                    <option value="Licencia y Certificado Medico Según Vehiculo">Licencia y Certificado Medico Según Vehiculo</option>
-                                    <option value="Cedula de Identidad/Autirizacion Para Conducir">Cedula de Identidad/Autirizacion Para Conducir</option>
-                                    <option value="CURSO CIP / EVAHC / Llave DrivePA">CURSO CIP / EVAHC / Llave DrivePA</option>
+                                    <option value="Licencia y Certificado Medico Según Vehiculo">Falla en Licencia y Certificado Medico Según Vehiculo</option>
+                                    <option value="Cedula de Identidad/Autirizacion Para Conducir">Falla en Cedula de Identidad/Autirizacion Para Conducir</option>
+                                    <option value="CURSO CIP / EVAHC / Llave DrivePA">Falla en CURSO CIP / EVAHC / Llave DrivePA</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="documentosVehiculo" hidden={ivahideDocVeh} onChange={checkFalla}>
                                     <option> </option>
-                                    <option value="Carnet de Circulacion Original">Carnet de Circulacion Original</option>
-                                    <option value="Responsabilidad Civil (RCV)">Responsabilidad Civil (RCV)</option>
-                                    <option value="Trimestres">Trimestres</option>
-                                    <option value="Placa Delantera y Trasera">Placa Delantera y Trasera</option>
+                                    <option value="Registro de Vehiculo y Carnet de Circulacion Original">Falla en Registro de Vehiculo y Carnet de Circulacion Original</option>
+                                    <option value="Responsabilidad Civil (RCV)">Falla en Responsabilidad Civil (RCV)</option>
+                                    <option value="Trimestres">Falla en Trimestres</option>
+                                    <option value="Placa Delantera y Trasera">Falla en Placa Delantera y Trasera</option>
                                 </select>
                             </div>
                             <div className="col">

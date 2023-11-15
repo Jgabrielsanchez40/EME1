@@ -1,15 +1,16 @@
 //<script type="text/jsx">
 
     var creadoPor;
-    let km, kmNext, costo, detalle;
+    let km, kmNext, costo, detalle, qfallasN;
 
     const formMantEme1 = () => {
         const fechaservicio = new Date().toLocaleString() + " ";
         const { vehiculo } = useParams()
         const [valor, setValor] = useState()
         const [dataSource, setdataSource] = useState([])
+        const [qfallas, setQfallas] = useState()
+     
         useEffect(listar, [])
-    
         async function User() {
             await google.script.run.withSuccessHandler(res => {
                 creadoPor = (res)
@@ -21,9 +22,9 @@
                 km = e.target.value;
                 kmNext = Math.floor(parseInt(km) + 5000);
                 setValor(kmNext);
-            } else if(e.target.name === "costo") {
-                costo = e.target.value;
-            } else if(e.target.name === "detalle") detalle = e.target.value;
+            } else if(e.target.name === "costo") costo = e.target.value;
+              else if(e.target.name === "detalle")  detalle = e.target.value;
+              else if(e.target.name === "qfallasN") qfallasN = e.target.value;
         }
 
         const saveData = (e) => {
@@ -33,18 +34,29 @@
             saveKM()
             google.script.run.withSuccessHandler(resp => {
                 e.target.reset();
+                listar()
                 notificacionTareaTerminada(resp.titulo, resp.descripcion);
             }).saveMANT({key, fechaservicio, creadoPor, vehiculo, km, costo, detalle});
         }
     
-        const saveKM = () => {
-            google.script.run.withSuccessHandler(resp => {
-             
-            }).updateKM(vehiculo, km, kmNext);
+        const saveKM = async () => {
+            let q;
+            if(qfallasN) q = qfallas - qfallasN;
+            else q = 0;
+            await google.script.run.withSuccessHandler(resp => {
+                console.log(vehiculo, km, kmNext, q, resp)
+            }).updateKM(vehiculo, km, kmNext, q);
+        }
+
+        const QFalla = async (vehiculo) => {
+            await google.script.run.withSuccessHandler(resp => {
+                setQfallas(resp)
+            }).qFalla(vehiculo)
         }
     
         async function listar() {
-            User()
+            await User()
+            await QFalla(vehiculo)
             await google.script.run.withSuccessHandler(res => {
                 const respuest = JSON.parse(res);          
                 let arreglo = [];
@@ -81,11 +93,11 @@
                                     </div>
                                 </div>
                             </div>
-                            <div className="row g-2">
+                            <div className="row g-4">
                                 <div className="col">
                                     <div className="input-group input-group-sm mb-3">
                                         <span className="input-group-text">KM Actual</span>
-                                        <input type="text" className="form-control" name="km" onChange={checkData} required></input>
+                                        <input type="number" className="form-control" name="km" onChange={checkData} required></input>
                                     </div>
                                 </div>
                                 <div className="col">
@@ -94,7 +106,6 @@
                                         <span className="form-control">{valor}</span>
                                     </div>
                                 </div>
-                              
                             </div>
                             <div className="row g-2">
                                 <div className="col">
@@ -107,6 +118,20 @@
                                     <div className="input-group input-group-sm mb-3">
                                         <span className="input-group-text">Costo $</span>
                                         <input type="text" name="costo" className="form-control" onChange={checkData} required></input>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="row g-2">
+                            <div className="col">
+                                    <div className="input-group input-group-sm mb-3">
+                                        <span className="input-group-text">Cant. Actual</span>
+                                        <span className="form-control">{qfallas}</span>
+                                    </div>
+                                </div>
+                                <div className="col">
+                                    <div className="input-group input-group-sm mb-3">
+                                        <span className="input-group-text">Cant. Fallas Resueltas</span>
+                                        <input type="text" className="form-control" name="qfallasN" onChange={checkData} required></input>
                                     </div>
                                 </div>
                             </div>

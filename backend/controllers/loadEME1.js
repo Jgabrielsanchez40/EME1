@@ -45,7 +45,7 @@ function listarVEH(id = undefined) {
     return JSON.stringify(_read(obtenerSheet(env_().SH_REGISTRE_VEHICULO), id))
 }
 
-function updateKM(vehiculo, km, kmNext = undefined) {
+function updateKM(vehiculo, km, kmNext, qfallas) {
     try {
         const sheet = obtenerSheet(env_().SH_REGISTRE_VEHICULO);
         const cRows = obtenerRows(env_().SH_REGISTRE_VEHICULO);
@@ -54,10 +54,31 @@ function updateKM(vehiculo, km, kmNext = undefined) {
             if(veh[i][1] == vehiculo)  { 
                 var j = 1 + i;
                 sheet.getRange(j, 3).setValue(km);
-                if(kmNext) sheet.getRange(j, 4).setValue(kmNext);
+                sheet.getRange(j, 4).setValue(kmNext);
+                sheet.getRange(j, 6).setValue(qfallas);
         }
     }
-        //updaData(vehiculo, km, sheet); 
+    } catch (error) {
+        console.error(error)
+    }
+}
+
+function updateKMM1(vehiculo, km, qfallas = undefined) {
+    try {
+        let d;
+        const sheet = obtenerSheet(env_().SH_REGISTRE_VEHICULO);
+        const cRows = obtenerRows(env_().SH_REGISTRE_VEHICULO);
+        var veh = sheet.getDataRange().getValues();
+        for(var i = 1; i < cRows; i++) {
+            if(veh[i][1] == vehiculo)  { 
+                var j = 1 + i;
+                sheet.getRange(j, 3).setValue(km);
+                 if(qfallas) { 
+                    d = parseInt(sheet.getRange(j, 6).getValues());
+                    sheet.getRange(j, 6).setValue(Math.floor(d + qfallas));
+                 }
+        }
+    }
     } catch (error) {
         console.error(error)
     }
@@ -71,6 +92,36 @@ function KM(vehiculo) {
         for(var i = 1; i < cRows; i++) {
             if(veh[i][1] == vehiculo)  { 
                 return veh[i][2]
+        }
+    }
+    } catch (error) {
+        console.error(error)
+    }
+}
+
+function KMFalta(vehiculo) {
+    try {
+        const sheet = obtenerSheet(env_().SH_REGISTRE_VEHICULO);
+        const cRows = obtenerRows(env_().SH_REGISTRE_VEHICULO);
+        var veh = sheet.getDataRange().getValues();
+        for(var i = 1; i < cRows; i++) {
+            if(veh[i][1] == vehiculo)  { 
+                return veh[i][3]
+        }
+    }
+    } catch (error) {
+        console.error(error)
+    }
+}
+
+function qFalla(vehiculo) {
+    try {
+        const sheet = obtenerSheet(env_().SH_REGISTRE_VEHICULO);
+        const cRows = obtenerRows(env_().SH_REGISTRE_VEHICULO);
+        var veh = sheet.getDataRange().getValues();
+        for(var i = 1; i < cRows; i++) {
+            if(veh[i][1] == vehiculo)  { 
+                return veh[i][5]
         }
     }
     } catch (error) {
@@ -98,3 +149,35 @@ function saveMANT(data) {
 function listarVEHmant(id = undefined) {
     return JSON.stringify(_read(obtenerSheet(env_().SH_REGISTRE_SERVICIO), id))
 }
+
+function validarUser(user) {
+    var useracceso = 'vacio';
+    const sheet = obtenerSheet(env_().SH_REGISTRE_ADMIN);
+    const cRows = obtenerRows(env_().SH_REGISTRE_ADMIN);
+    var cant = sheet.getDataRange().getValues();
+    for(var i = 1; i < cRows; i++) {
+        if(cant[i][0] == user)  { 
+            useracceso = cant[i][0]
+    } 
+ } return useracceso
+}
+
+function updateActivo(key, activo) {
+    try {
+        const sheet = obtenerSheet(env_().SH_REGISTRE_VEHICULO);
+        const cRows = obtenerRows(env_().SH_REGISTRE_VEHICULO);
+        var veh = sheet.getDataRange().getValues();
+        for(var i = 1; i < cRows; i++) {
+            if(veh[i][0] === key)  { 
+                var j = 1 + i;
+                sheet.getRange(j, 7).setValue(activo);
+        }
+    }
+    } catch (error) {
+        console.error(error)
+    }
+}
+
+function listarRecursos(Activo) {
+    return JSON.stringify(_readVEH(obtenerSheet(env_().SH_REGISTRE_VEHICULO), Activo));
+  }
