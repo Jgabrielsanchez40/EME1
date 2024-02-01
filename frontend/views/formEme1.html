@@ -17,6 +17,8 @@ let ivahideTrans = true;
 let ivahideDocCo = true;
 let ivahideDocVeh = true;
 
+let kmrest = 0;
+
 const formEme1 = () => {
     const fechaCreado = new Date().toLocaleString() + " ";
     useEffect(User)
@@ -32,16 +34,18 @@ const formEme1 = () => {
     const [fkm, setFkm] = useState();
     const [revdisa, setRevdisa] = useState(true);
     const [recurso, setRecurso] = useState([])
- 
-    function User() {
-        google.script.run.withSuccessHandler(res => {
+    const [stop, setStop] = useState(0)
+    const [stopKm, setStopKm] = useState(0)
+    
+    async function User() {
+        await google.script.run.withSuccessHandler(res => {
             creadoPor = (res)
             cantRow()
         }).perfil();
     }
 
-    function cantRow() {
-        google.script.run.withSuccessHandler(res => {
+    async function cantRow() {
+        await google.script.run.withSuccessHandler(res => {
             numerofila = (res)
             id = "EME1-" + Math.floor(numerofila + 1)
             //listarRecurso()
@@ -53,11 +57,22 @@ const formEme1 = () => {
         setValues({...values, [name]: value})
         if(e.target.name === "vehiculo")  { vehiculoselect = e.target.value; kmFalta(vehiculoselect); setRevdisa(false)}
         if(e.target.name === "vehiculoApto") setDisa(false)
+
+        if(e.target.name === "DrivePA" && e.target.value === "SI") setStop(1)
+        if(e.target.name === "DrivePA" && e.target.value === "NO") setStop(0)
     }
 
     const kmFalta = async (vehiculoselect) => {
         await google.script.run.withSuccessHandler(resp => {
-            setFkm(resp)
+            const respuest = JSON.parse(resp);
+            respuest.map(data => {
+                setFkm(data.kmNext)
+                kmrest = data.kmNext - data.km
+                if(kmrest <= 500) setStopKm(0)
+                else if(kmrest >= 500) setStopKm(1)
+            })
+            
+            
         }).KMFalta(vehiculoselect)
     }
 
@@ -95,8 +110,16 @@ const formEme1 = () => {
          qfallas = 0;
         await google.script.run.withSuccessHandler(resp => {
             notificacionTareaTerminada(resp.titulo, resp.descripcion);
+            //email(id, fechaCreado, creadoPor, vehiculo.value, km.value)
         }).saveEME1(JSON.stringify({ id, fechaCreado, creadoPor, ...values } ));
     }
+
+    /* const email = async (id, fechaCreado, creadoPor, vehiculo, km) => {
+        console.log(id, fechaCreado, creadoPor, vehiculo, km)
+        await google.script.run.withSuccessHandler(res => {
+
+        }).emailSend()
+    } */
 
      const saveKM = async () => {
         await google.script.run.withSuccessHandler(resp => {
@@ -118,6 +141,12 @@ const formEme1 = () => {
     const bcolor = () => {
         if(carga === true) return ('#0d6efd')
         else if(carga === false) return ('#ffc107')
+    }
+
+    const kmcolor = (kfalta) => {
+        if(kfalta <= 500) return ('#dc3545')
+        else if(kfalta > 500 && kfalta <= 1500) return ('#ffc107')
+        else if(kfalta > 1500) return ('#198754')
     }
 
     return (
@@ -203,7 +232,7 @@ const formEme1 = () => {
                             </div>
                         </div>
                         <div className="row g-2">
-                            <div className="col">
+                            <div className="col-4">
                                 <div className="input-group input-group-sm mb-3">
                                     <span className="input-group-text" >Vehiculo - Placa</span>
                                     <div className="flex-sm justify-content-evenly">
@@ -215,6 +244,22 @@ const formEme1 = () => {
                                     </div>
                                 </div>
                             </div>
+                            <div className="col-4">
+                            <div className="input-group input-group-sm mb-3">
+                                    <span className="input-group-text">Posee DrivePA</span>
+                                    <div className="ms-2 bg-white border rounded">
+                                        <div className="form-check form-check-inline">
+                                            <input className="form-check-input" type="radio" value="SI" name="DrivePA" onChange={checkData} required></input>
+                                             <label className="form-check-label">SI</label>
+                                        </div>
+                                        <div className="form-check form-check-inline">
+                                            <input className="form-check-input" type="radio" value="NO" name="DrivePA" onChange={checkData}></input>
+                                            <label className="form-check-label">NO</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                                
                         </div>
                         <div className="row g-2">
                             <div className="col-4">
@@ -226,7 +271,7 @@ const formEme1 = () => {
                             <div className="col-4">
                                 <div className="input-group input-group-sm mb-3">
                                     <span className="input-group-text">KM para Servicio</span>
-                                    <span type="text" className="form-control" name="Ultimokm">{fkm}</span>
+                                    <span type="text" className="form-control text-light" name="Ultimokm" style={{"backgroundColor": kmcolor(kmrest), "fontSize": "12px" }}>{fkm}</span>
                                 </div>
                             </div>
                         </div>
@@ -263,7 +308,7 @@ const formEme1 = () => {
                         <div className="row">
                             <div className="col">
                                 <select className="form-select form-select-sm mb-3" name="IvehiculoApagado" required onChange={checkFalla} disabled={revdisa}>
-                                    <option value=" ">Revisar</option>
+                                    <option selected>Revisar</option>
                                     <option value="Comportamiento Motor">Comportamiento Motor</option>
                                     <option value="Dirección">Dirección</option>
                                     <option value="Suspensión y Cauchos">Suspensión y Cauchos</option>
@@ -276,7 +321,7 @@ const formEme1 = () => {
                         <div className="row g-2">
                             <div className="col-sm-6 col-md-8">
                                 <select className="form-select form-select-sm mb-3" name="comportamientoMotor" hidden={ivahideM} onChange={checkFalla}>
-                                    <option> </option>
+                                    <option selected> </option>
                                     <option value="Nivel de Aceite  de Motor/ Condiciones / Fugas">Falla en Nivel de Aceite  de Motor/ Condiciones / Fugas</option>
                                     <option value="Radiador / Tapa /  Mangueras / Fugas">Falla en Radiador / Tapa /  Mangueras / Fugas</option>
                                     <option value="Envase y Nivel de Refrigerante / Fugas">Falla en Envase y Nivel de Refrigerante / Fugas</option>
@@ -290,13 +335,14 @@ const formEme1 = () => {
                                     <option value="Mangueras y conexiones">Falla en Mangueras y conexiones</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="suspensionCauchos" hidden={ivahidesc} onChange={checkFalla}>
-                                    <option> </option>
+                                    <option selected> </option>
                                     <option value="Estado de cauchos y Presion de Aire">Falla en Estado de cauchos y Presion de Aire</option>
                                     <option value="Tuercas Ajustadas y Completas">Falla en Tuercas Ajustadas y Completas</option>
                                     <option value="Amortiguadores / Espirales / Ballestas">Falla en Amortiguadores / Espirales / Ballestas</option>
+                                    <option value="Condiciones de Neumáticos">Falla en Condiciones de Neumáticos</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="carroceriaTapiceria" hidden={ivahidect} onChange={checkFalla}>
-                                    <option> </option>
+                                    <option selected> </option>
                                     <option value="Faros y Micas Traseras / Delanteras">Falla en Faros y Micas Traseras / Delanteras</option>
                                     <option value="Manillas/Cerraduras/Seguros de Puertas">Falla en Manillas/Cerraduras/Seguros de Puertas</option>
                                     <option value="Vidrio Delantero/Trasero/Ventanas/Retrovisores">Falla en Vidrio Delantero/Trasero/Ventanas/Retrovisores</option>
@@ -305,7 +351,7 @@ const formEme1 = () => {
                                     <option value="Cinturones de seguridad/Repoza Cabezas/Air Bag">Falla en Cinturones de seguridad/Repoza Cabezas/Air Bag</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="herramientasSeguridad" hidden={ivahidesh} onChange={checkFalla}>
-                                    <option> </option>
+                                    <option selected> </option>
                                     <option value="DrivePA">Falla en DrivePA</option>
                                     <option value="Extintor / Triangulo de seguridad">Falta de Extintor / Triangulo de seguridad</option>
                                     <option value="Gato / Llave de cruz / Linterna">Falla en Gato / Llave de cruz / Linterna</option>
@@ -317,7 +363,7 @@ const formEme1 = () => {
                                 </select>
                             </div>
                             <div className="col">
-                                <button className='btn btn-block btn-sm text-white' style={{"backgroundColor": bcolor()}} onClick={() => {setCarga(false); saveFalla()}}>{carga ? "Cargar Falla" : "Salvando"}</button></div>
+                                <button className='btn btn-block btn-sm text-white' style={{"backgroundColor": bcolor()}} onClick={() => {setCarga(false); saveFalla()}} disabled={revdisa}>{carga ? "Cargar Falla" : "Salvando"}</button></div>
                         </div>
                     </div>
                 </div>
@@ -327,7 +373,7 @@ const formEme1 = () => {
                         <div className="row">
                             <div className="col">
                                 <select className="form-select form-select-sm mb-3" name="IvehiculoEncendido" required onChange={checkFalla} disabled={revdisa}>
-                                    <option value=" ">Revisar</option>
+                                    <option selected>Revisar</option>
                                     <option value="Frenos y Panel de Instrumentos">Frenos y Panel de Instrumentos</option>
                                     <option value="Electrico">Electrico</option>
                                     <option value="Transmisión">Transmisión</option>
@@ -340,14 +386,14 @@ const formEme1 = () => {
                         <div className="row g-2">
                             <div className="col-sm-6 col-md-8">
                                 <select className="form-select form-select-sm mb-3" name="frenosPanelInstrumento" hidden={ivahideFPI} onChange={checkFalla}>
-                                    <option> </option>
+                                    <option selected> </option>
                                     <option value="Indicadores y Luces de Advertencia en el Tablero">Falla en Indicadores y Luces de Advertencia en el Tablero</option>
                                     <option value="Velocimetro / Tacometro (RPM)">Falla en Velocimetro / Tacometro (RPM)</option>
                                     <option value="Presiones de Aceite y Temperatura Motor">Falla en Presiones de Aceite y Temperatura Motor</option>
                                     <option value="Funcionamiento frenos de Estacionamiento">Falla en Funcionamiento frenos de Estacionamiento</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="electrico" hidden={ivahideElec} onChange={checkFalla}>
-                                    <option> </option>
+                                    <option selected> </option>
                                     <option value="Luces/Alta/Baja/Freno/Emenrgencia/Giro/Retroceso">Falla en Luces/Alta/Baja/Freno/Emenrgencia/Giro/Retroceso</option>
                                     <option value="Luz Del Porta Placa Trasero / Tercer Stop">Falla en Luz Del Porta Placa Trasero / Tercer Stop</option>
                                     <option value="Luces internas/Tablero/De techo/Maletero/Adicionales">Falla en Luces internas/Tablero/De techo/Maletero/Adicionales</option>
@@ -361,19 +407,19 @@ const formEme1 = () => {
                                     <option value="Equipo de sonido y Cornetas o Bocinas de Audio">Falla en Equipo de sonido y Cornetas o Bocinas de Audio</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="transmision" hidden={ivahideTrans} onChange={checkFalla}>
-                                    <option> </option>
+                                    <option selected> </option>
                                     <option value="Nivel de fluido de transmisión / Fugas">Falla en Nivel de fluido de transmisión / Fugas</option>
                                     <option value="Embrague Nivel de Fluido/Fugas/Recorrido/Aplicación">Falla en Embrague Nivel de Fluido/Fugas/Recorrido/Aplicación</option>
                                     <option value="Palanca de cambios">Falla en Palanca de cambios</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="documentosConductor" hidden={ivahideDocCo} onChange={checkFalla}>
-                                    <option> </option>
+                                    <option selected> </option>
                                     <option value="Licencia y Certificado Medico Según Vehiculo">Falla en Licencia y Certificado Medico Según Vehiculo</option>
                                     <option value="Cedula de Identidad/Autirizacion Para Conducir">Falla en Cedula de Identidad/Autirizacion Para Conducir</option>
                                     <option value="CURSO CIP / EVAHC / Llave DrivePA">Falla en CURSO CIP / EVAHC / Llave DrivePA</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="documentosVehiculo" hidden={ivahideDocVeh} onChange={checkFalla}>
-                                    <option> </option>
+                                    <option selected> </option>
                                     <option value="Registro de Vehiculo y Carnet de Circulacion Original">Falla en Registro de Vehiculo y Carnet de Circulacion Original</option>
                                     <option value="Responsabilidad Civil (RCV)">Falla en Responsabilidad Civil (RCV)</option>
                                     <option value="Trimestres">Falla en Trimestres</option>
@@ -381,7 +427,7 @@ const formEme1 = () => {
                                 </select>
                             </div>
                             <div className="col">
-                                <button className='btn btn-block btn-sm text-white' style={{"backgroundColor": bcolor()}} onClick={() => {setCarga(false); saveFalla()}}>{carga ? "Cargar Falla" : "Salvando"}</button></div>
+                                <button className='btn btn-block btn-sm text-white' style={{"backgroundColor": bcolor()}} onClick={() => {setCarga(false); saveFalla()}} disabled={revdisa}>{carga ? "Cargar Falla" : "Salvando"}</button></div>
                         </div>
                     </div>
                 </div>
@@ -397,15 +443,15 @@ const formEme1 = () => {
                                 </div>
                             </div>
                             <div className="col">
-                                <div className="input-group input-group-sm mb-3">
+                                <div className="input-group input-group-sm mb-3" >
                                     <span className="input-group-text">Apto Para Uso</span>
                                     <div className="ms-2 bg-white border rounded">
                                         <div className="form-check form-check-inline">
-                                            <input className="form-check-input" type="radio" value="SI" name="vehiculoApto" onChange={checkData} required></input>
-                                             <label className="form-check-label">   SI   </label>
+                                            <input className="form-check-input" disabled={ stop === 0 ? true : (stopKm === 0 ? true : false)} type="radio" value="SI" name="vehiculoApto" onChange={checkData} required></input>
+                                             <label className="form-check-label">SI</label>
                                         </div>
                                         <div className="form-check">
-                                            <input className="form-check-input" type="radio" value="NO" name="vehiculoApto" onChange={checkData}></input>
+                                            <input className="form-check-input" disabled={ stop === 0 ? true : (stopKm === 0 ? true : false)} type="radio" value="NO" name="vehiculoApto" onChange={checkData}></input>
                                             <label className="form-check-label">NO</label>
                                         </div>
                                     </div>

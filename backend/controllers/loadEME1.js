@@ -1,11 +1,13 @@
 function saveEME1(data) {
+    const dat = JSON.parse(data)
     try {
         const sheet = obtenerSheet(env_().SH_REGISTRE_LOAD);
-        Insert(JSON.parse(data), sheet);
-        return {
+        Insert(dat, sheet);
+        emailSend(dat.id, dat.fechaCreado, dat.creadoPor, dat.empresa, dat.departamento, dat.vehiculo, dat.km)
+         return {
             titulo:" Registro Exitoso",
-            descripcion: "EME1 Cargado En Sistema"
-        }
+            descripcion: "EME1 Cargado En Sistema",
+            }
     } catch (error) {
         return {
             titulo: "Ha Ocurrido un Error! " + error,
@@ -100,7 +102,8 @@ function KM(vehiculo) {
 }
 
 function KMFalta(vehiculo) {
-    try {
+    return JSON.stringify(_readPlaca(obtenerSheet(env_().SH_REGISTRE_VEHICULO), vehiculo))
+    /* try {
         const sheet = obtenerSheet(env_().SH_REGISTRE_VEHICULO);
         const cRows = obtenerRows(env_().SH_REGISTRE_VEHICULO);
         var veh = sheet.getDataRange().getValues();
@@ -109,9 +112,9 @@ function KMFalta(vehiculo) {
                 return veh[i][3]
         }
     }
-    } catch (error) {
+    } catch (error) { _readPlaca
         console.error(error)
-    }
+    } */
 }
 
 function qFalla(vehiculo) {
@@ -180,4 +183,19 @@ function updateActivo(key, activo) {
 
 function listarRecursos(Activo) {
     return JSON.stringify(_readVEH(obtenerSheet(env_().SH_REGISTRE_VEHICULO), Activo));
+  }
+
+  function emailSend(id, fechaCreado, creadoPor, empresa, departamento, vehiculo, km) {
+    const usuario = { id, fechaCreado, creadoPor, empresa, departamento, vehiculo, km }
+    var repo = HtmlService.createTemplateFromFile('frontend/report.html')
+    repo.usuario = usuario
+    var mes = repo.evaluate().getContent()
+  
+      GmailApp.sendEmail(
+        'mbetancourt@integra-ws.com, orodriguez@integra-ws.com, jydrogo@integra-ws.com',
+        "Ticket: " + usuario.id,
+         "mes",
+         {htmlBody: mes}
+    );
+  
   }

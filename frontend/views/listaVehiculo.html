@@ -3,6 +3,17 @@
     let creado, user;
     function listaVehiculo() {
         const [dataSource, setdataSource] = useState([])
+        const [buscaname, setBuscaname] = useState("")
+        const [dataFiltrada, setdataFiltrada] = useState([])
+
+        const [currentPage, setCurrentPage] = useState(1)
+        const recordsPerPage = 10
+        const lastIndex = currentPage * recordsPerPage
+        const firstIndex = lastIndex - recordsPerPage
+        const records = dataSource.slice(firstIndex, lastIndex)
+        const npage = Math.ceil(dataSource.length / recordsPerPage)
+        const numbers = [...Array(npage + 1).keys()].slice(1)
+
          useEffect(User, [])
     
         const history = useHistory()
@@ -33,9 +44,11 @@
                     respuest
                         .map(data => {
                             kfalta = parseInt(data.kmNext - data.km)
-                            arreglo.push({...data, kfalta})
+                            if(data.vehiculo != "Seleccione")
+                                arreglo.push({...data, kfalta})
                     }) 
                     setdataSource(arreglo)
+                    setdataFiltrada(arreglo)
                    }).listarVEH();
         }    
     
@@ -67,10 +80,32 @@
             if(color === 'No') return ('#dc3545')
             else if(color === 'Si') return ('#198754')
         }
+
+        const funBuscaname = (e) => {
+            setBuscaname(e.target.value)
+            let arreglo = []
+            arreglo = dataFiltrada.filter((data) => data.vehiculo.toUpperCase().includes(e.target.value.trim().toUpperCase()))
+            if(arreglo.length > 0)
+                setdataSource(arreglo)
+       }
+
+        function nextPage() {
+            if(currentPage !== npage)
+                setCurrentPage(currentPage + 1)
+        }
+    
+        function prePage() {
+            if(currentPage !== 1)
+                setCurrentPage(currentPage - 1)
+            }
+    
+        function changeCPage(id) {
+            setCurrentPage(id)
+        }
         
         return (
             <div className="container-sm rounded shadow" style={{"marginTop": '2rem'}}>
-                <div className="row g-2">
+                <div className="row g-2 top-2">
                     <div className="col">
                         <div className="input-group input-group-sm mb-3">
                             <span className="input-group-text">Usuario</span>
@@ -83,7 +118,13 @@
                         </div>
                     </div>
                 </div>
-                <table className="table table-striped mb-2">
+                <div className="col">
+                        <div className="input-group input-group-sm mb-3 w-25">
+                            <span className="input-group-text">Filtro Placa Vehiculo</span>
+                            <input type="text" name="searchname" className="form-control" style={{"fontSize": "12px" }} value={buscaname} onChange={funBuscaname}></input>
+                        </div>
+                    </div>
+                <table className="table table-hover">
                     <thead>
                         <tr>
                             <th scope="ID">Vehiculo</th>
@@ -98,22 +139,41 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {dataSource
-                        .sort((a, b) => b.vehiculoa < a.vehiculo)
+                        {records
+                        .sort((a, b) => b.vehiculo < a.vehiculo)
                         .map((datos) => ( 
-                        <tr key={datos.key}>
+                        <tr key={datos.key} style={{"fontSize": "12px" }} >
                             <td scope="row">{datos.vehiculo}</td>
                             <td scope="row">{datos.km}</td>
                             <td>{datos.kmNext}</td>
-                            <td><p className="btn btn-sm text-white" style={{"backgroundColor": bcolor(datos.kfalta)}} >{datos.kfalta}</p></td>
-                            <td><button className="btn bg-success btn-sm text-white" onClick={() => {handCheck(datos.vehiculo)}}>Ver</button></td>
-                            <td><p className="badge rounded-pill text-bg-info fs-6">{datos.qfallas > 0 ? datos.qfallas : "-" }</p></td>
-                            <td><button className="btn btn-sm text-white fs-6" style={{"backgroundColor": Activocolor(datos.Activo)}} onClick={() => { handActivo(datos.Activo, datos.key)}}>{datos.Activo === 'Si' ? '√' : "X" }</button></td>
-                            <td><button className="btn bg-warning btn-sm text-black" onClick={() => {handMant(datos.vehiculo)}}>Mant</button></td>
+                            <td><p className="btn btn-sm text-white" style={{"backgroundColor": bcolor(datos.kfalta), "fontSize": "12px" }} >{datos.kfalta}</p></td>
+                            <td><button className="btn bg-success btn-sm text-white" style={{"fontSize": "12px" }} onClick={() => {handCheck(datos.vehiculo)}}>Ver</button></td>
+                            <td><p className="badge rounded-pill text-bg-info" style={{"fontSize": "12px" }}>{datos.qfallas > 0 ? datos.qfallas : "-" }</p></td>
+                            <td><button className="btn btn-sm text-white" style={{"backgroundColor": Activocolor(datos.Activo), "fontSize": "12px" }} onClick={() => { handActivo(datos.Activo, datos.key)}}>{datos.Activo === 'Si' ? '√' : "X" }</button></td>
+                            <td><button className="btn bg-warning btn-sm text-black" style={{"fontSize": "12px" }} onClick={() => {handMant(datos.vehiculo)}}>Mant</button></td>
                         </tr>
                         ))}
                     </tbody>
               </table>
+              <nav>
+                <ul className="pagination pagination-sm justify-content-md-center">
+                    <li className="page-item">
+                        <a href="#" className="page-link" onClick={prePage}>Ant.</a>
+                    </li>
+                    { 
+                        numbers.map((n, i) => (
+                            <li className={`page-item ${currentPage === n ? 'active' : ''}`}key={i}>
+                                <a href="#" className="page-link" onClick={()=> changeCPage(n)}>
+                                    {n}
+                                </a>
+                            </li>
+                        ))
+                    }
+                    <li className="page-item">
+                        <a href="#" className="page-link" onClick={nextPage}>Sig.</a>
+                    </li>
+                </ul>
+             </nav>
             </div>
         )
     }
