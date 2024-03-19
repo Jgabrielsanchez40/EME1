@@ -56,6 +56,10 @@
             history.push("/listaMantEme1/" + vehiculo)
         }
 
+        const handListFails = (id) => {
+            history.push("/listaFalla/" + id)
+        }
+
         const handMant = (vehiculo) => {
             history.push("/formMantEme1/"  + vehiculo)
         }
@@ -131,7 +135,7 @@
                             <th scope="col">KM Actual</th>
                             <th scope="col">Próximo Servicio</th>
                             <th scope="col">KM Restante</th>
-                            <th scope="col">Acciones</th>
+                            <th scope="col">EME1 Creados</th>
                             <th scope="col">Cant. Fallas</th>
                             <th scope="col">Operativo</th>
                             <th scope="col">Mantenimiento</th>
@@ -148,7 +152,7 @@
                             <td>{datos.kmNext}</td>
                             <td><p className="btn btn-sm text-white" style={{"backgroundColor": bcolor(datos.kfalta), "fontSize": "12px" }} >{datos.kfalta}</p></td>
                             <td><button className="btn bg-success btn-sm text-white" style={{"fontSize": "12px" }} onClick={() => {handCheck(datos.vehiculo)}}>Ver</button></td>
-                            <td><p className="badge rounded-pill text-bg-info" style={{"fontSize": "12px" }}>{datos.qfallas > 0 ? datos.qfallas : "-" }</p></td>
+                            <td><button className="badge rounded-pill border-0 text-bg-info" style={{"fontSize": "12px" }} onClick={() => {handListFails(datos.vehiculo)}}>{datos.qfallas > 0 ? datos.qfallas : "-" }</button></td>
                             <td><button className="btn btn-sm text-white" style={{"backgroundColor": Activocolor(datos.Activo), "fontSize": "12px" }} onClick={() => { handActivo(datos.Activo, datos.key)}}>{datos.Activo === 'Si' ? '√' : "X" }</button></td>
                             <td><button className="btn bg-warning btn-sm text-black" style={{"fontSize": "12px" }} onClick={() => {handMant(datos.vehiculo)}}>Mant</button></td>
                         </tr>

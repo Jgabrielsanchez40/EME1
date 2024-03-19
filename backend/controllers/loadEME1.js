@@ -30,9 +30,9 @@ function perfil() {
 
 function saveFalla(data) {
     try {
-        const { key, id, IVehiculo, DetalleFalla } = data
+        const { key, id, IVehiculo, DetalleFalla, vehiculo } = data
         const sheet = obtenerSheet(env_().SH_REGISTRE_DETALLEFALLA);
-        sheet.appendRow([key, id, IVehiculo, DetalleFalla])
+        sheet.appendRow([key, id, IVehiculo, DetalleFalla, vehiculo])
        // Insert(JSON.parse(data), sheet);
     } catch (error) {
        console.error(error)
@@ -40,7 +40,11 @@ function saveFalla(data) {
 }
 
 function listarFalla(id = undefined) {
-    return JSON.stringify(_read(obtenerSheet(env_().SH_REGISTRE_DETALLEFALLA), id))
+    return JSON.stringify(_readVEHFalla(obtenerSheet(env_().SH_REGISTRE_DETALLEFALLA), id))
+} 
+
+function listarFallaReparar(id = undefined) {
+    return JSON.stringify(_readVEHFallaReparada(obtenerSheet(env_().SH_REGISTRE_DETALLEFALLA), id))
 }
 
 function listarVEH(id = undefined) {
@@ -134,9 +138,9 @@ function qFalla(vehiculo) {
 
 function saveMANT(data) {
     try {
-        const { key, fechaservicio, creadoPor, vehiculo, km, costo, detalle } = data
+        const { key, fechaservicio, creadoPor, vehiculo, km, costo, detalle, tipoServicio } = data
         const sheet = obtenerSheet(env_().SH_REGISTRE_SERVICIO);
-        sheet.appendRow([key, fechaservicio, creadoPor, vehiculo, km, costo, detalle])
+        sheet.appendRow([key, fechaservicio, creadoPor, vehiculo, km, costo, detalle, tipoServicio ])
         return {
             titulo:" Registro Exitoso",
             descripcion: "Mantenimiento Cargado En Sistema"
@@ -150,7 +154,7 @@ function saveMANT(data) {
 }
 
 function listarVEHmant(id = undefined) {
-    return JSON.stringify(_read(obtenerSheet(env_().SH_REGISTRE_SERVICIO), id))
+    return JSON.stringify(_readPlaca(obtenerSheet(env_().SH_REGISTRE_SERVICIO), id))
 }
 
 function validarUser(user) {
@@ -199,3 +203,22 @@ function listarRecursos(Activo) {
     );
   
   }
+
+  function updateSeleccion(key, cambio, reparado, fechaservicio, keyMant) {
+    try {
+        const sheet = obtenerSheet(env_().SH_REGISTRE_DETALLEFALLA);
+        const cRows = obtenerRows(env_().SH_REGISTRE_DETALLEFALLA);
+        var veh = sheet.getDataRange().getValues();
+        for(var i = 1; i < cRows; i++) {
+            if(veh[i][0] === key)  { 
+                var j = 1 + i;
+                sheet.getRange(j, 6).setValue(reparado);
+                sheet.getRange(j, 7).setValue(fechaservicio);
+                sheet.getRange(j, 8).setValue(keyMant);
+                sheet.getRange(j, 9).setValue(cambio);
+        }
+    }
+    } catch (error) {
+        console.error(error)
+    }
+}

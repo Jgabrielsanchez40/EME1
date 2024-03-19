@@ -21,6 +21,7 @@ let kmrest = 0;
 
 const formEme1 = () => {
     const fechaCreado = new Date().toLocaleString() + " ";
+    const history = useHistory()
     useEffect(User)
 
     useEffect(() => {
@@ -33,9 +34,11 @@ const formEme1 = () => {
     const [disa, setDisa] = useState(true)
     const [fkm, setFkm] = useState();
     const [revdisa, setRevdisa] = useState(true);
+    const [revdisa2, setRevdisa2] = useState(true);
     const [recurso, setRecurso] = useState([])
     const [stop, setStop] = useState(0)
     const [stopKm, setStopKm] = useState(0)
+    const [validaGas, setValidaGas] = useState(true)
     
     async function User() {
         await google.script.run.withSuccessHandler(res => {
@@ -55,11 +58,13 @@ const formEme1 = () => {
     const checkData = (e) => {
         const { name, value } = e.target;
         setValues({...values, [name]: value})
-        if(e.target.name === "vehiculo")  { vehiculoselect = e.target.value; kmFalta(vehiculoselect); setRevdisa(false)}
+        if(e.target.name === "vehiculo")  { vehiculoselect = e.target.value; kmFalta(vehiculoselect);   }
         if(e.target.name === "vehiculoApto") setDisa(false)
 
-        if(e.target.name === "DrivePA" && e.target.value === "SI") setStop(1)
-        if(e.target.name === "DrivePA" && e.target.value === "NO") setStop(0)
+        if(e.target.name === "DrivePA" && e.target.value === "SI") setStop(1);
+        if(e.target.name === "DrivePA" && e.target.value === "NO") setStop(0);
+
+        if(e.target.name === 'combustible' && e.target.value != '') setValidaGas(false) 
     }
 
     const kmFalta = async (vehiculoselect) => {
@@ -79,47 +84,43 @@ const formEme1 = () => {
     const checkFalla = (e) => {
         const { name, value } = e.target;
         setFValues({...fvalues, [name]: value})
-    
-        if(e.target.value === "Comportamiento Motor" || e.target.value === "Nivel de Aceite  de Motor/ Condiciones / Fugas" || e.target.value === "Radiador / Tapa /  Mangueras / Fugas" || e.target.value === "Envase y Nivel de Refrigerante / Fugas" || e.target.value === "Condicion Filtro de Aire / Carcaza / Ductos" || e.target.value === "Condicion Correas / Tensión y Ajuste" || e.target.value === "Nivel de Fluido de Frenos / Fugas") { ivahideM = false; IVehiculo = "Comportamiento Motor"; DetalleFalla = e.target.value; } else ivahideM = true;
+        
+        if(e.target.value === "Comportamiento Motor" || e.target.value === "Nivel de Aceite  de Motor/ Condiciones / Fugas" || e.target.value === "Radiador / Tapa /  Mangueras / Fugas" || e.target.value === "Envase y Nivel de Refrigerante / Fugas" || e.target.value === "Condicion Filtro de Aire / Carcaza / Ductos" || e.target.value === "Condicion Correas / Tensión y Ajuste" || e.target.value === "Nivel de Fluido de Frenos / Fugas") { ivahideM = false; IVehiculo = "Comportamiento Motor"; DetalleFalla = e.target.value;  } else ivahideM = true;
+        if(e.target.value === "Comportamiento Motor" || e.target.value === "Dirección" || e.target.value === "Suspensión y Cauchos" || e.target.value === "Carrocería y Tapicería" || e.target.value === "Elementos de Seguridad y Herramientas") { setRevdisa(false)  } ;
         if(e.target.value === "Dirección" || e.target.value === "Envase / Tapa / Nivel de aceite hidráulico / Fugas" || e.target.value === "Mangueras y conexiones" ) { ivahideD = false; IVehiculo = "Dirección"; DetalleFalla = e.target.value; } else ivahideD = true;
         if(e.target.value === "Suspensión y Cauchos" || e.target.value === "Estado de cauchos y Presion de Aire" || e.target.value === "Tuercas Ajustadas y Completas" || e.target.value === "Amortiguadores / Espirales / Ballestas") { ivahidesc = false; IVehiculo = "Suspensión y Cauchos"; DetalleFalla = e.target.value;} else ivahidesc = true;
         if(e.target.value === "Carrocería y Tapicería" || e.target.value === "Faros y Micas Traseras / Delanteras" || e.target.value === "Manillas/Cerraduras/Seguros de Puertas" || e.target.value === "Vidrio Delantero/Trasero/Ventanas/Retrovisores" || e.target.value === "Estado de Tablero / Asientos / Tapiceria de Techo" || e.target.value === "Estado de Piso / Alfombras / Felpudos" || e.target.value === "Cinturones de seguridad/Repoza Cabezas/Air Bag") { ivahidect = false; IVehiculo = "Carrocería y Tapicería"; DetalleFalla = e.target.value;} else ivahidect = true; 
         if(e.target.value === "Elementos de Seguridad y Herramientas" || e.target.value === "DrivePA" || e.target.value === "Extintor / Triangulo de seguridad" || e.target.value === "Gato / Llave de cruz / Linterna" || e.target.value === "Caucho de Repuesto" || e.target.value === "Kit De Primeros Auxilios" || e.target.value === "Baranda Proteccion Contra Vuelcos" || e.target.value === "Objetos Sueltos Dentro del Vehiculo o Cajón" || e.target.value === "Orden y Limpieza (Interna, Externa, Maletero)") { ivahidesh = false; IVehiculo = "Elementos de Seguridad y Herramientas"; DetalleFalla = e.target.value;} else ivahidesh = true;
-    
+
+
+        //Encendido
         if(e.target.value === "Frenos y Panel de Instrumentos" || e.target.value === "Indicadores y Luces de Advertencia en el Tablero" || e.target.value === "Velocimetro / Tacometro (RPM)" || e.target.value === "Funcionamiento de pedal de freno" || e.target.value === "Funcionamiento frenos de Estacionamiento") { ivahideFPI = false; IVehiculo = "Frenos y Panel de Instrumentos"; DetalleFalla = e.target.value; } else ivahideFPI = true;
         if(e.target.value === "Electrico" || e.target.value === "Luces/Alta/Baja/Freno/Emenrgencia/Giro/Retroceso" || e.target.value === "Luz Del Porta Placa Trasero / Tercer Stop" || e.target.value === "Luces internas/Tablero/De techo/Maletero/Adicionales" || e.target.value === "Alarma / Sirena / Control" || e.target.value === "Alarma de retroceso" || e.target.value === "Limpia para brisas/Cepillos/Lava Para Brisas" || e.target.value === "Corneta / Bocina" || e.target.value === "Condiciones de batería / Bornes / Cables" || e.target.value === "Desplazamiento de ventanas eléctricas" || e.target.value === "Aire Acondicionado/Filtro/Rejillas/Botones y Mandos" || e.target.value === "Equipo de sonido y Cornetas o Bocinas de Audio") { ivahideElec = false; IVehiculo = "Electrico"; DetalleFalla = e.target.value; } else ivahideElec = true;
         if(e.target.value === "Transmisión" || e.target.value === "Nivel de fluido de transmisión / Fugas" || e.target.value === "Embrague Nivel de Fluido/Fugas/Recorrido/Aplicación" || e.target.value === "Palanca de cambios") { ivahideTrans = false; IVehiculo = "Transmisión"; DetalleFalla = e.target.value;} else ivahideTrans = true;
         if(e.target.value === "Documentos Conductor" || e.target.value === "Licencia y Certificado Medico Según Vehiculo" || e.target.value === "Cedula de Identidad/Autirizacion Para Conducir" || e.target.value === "CURSO CIP / EVAHC / Llave DrivePA") { ivahideDocCo = false; IVehiculo = "Documentos Conductor"; DetalleFalla = e.target.value;} else ivahideDocCo = true; 
         if(e.target.value === "Documentos Vehiculos" || e.target.value === "Carnet de Circulacion Original" || e.target.value === "Responsabilidad Civil (RCV)" || e.target.value === "Trimestres" || e.target.value === "Placa Delantera y Trasera") { ivahideDocVeh = false; IVehiculo = "Documentos Vehiculos"; DetalleFalla = e.target.value;} else ivahideDocVeh = true;
+        if(e.target.value === "Documentos Conductor" || e.target.value === "Frenos y Panel de Instrumentos" || e.target.value === "Electrico" || e.target.value === "Transmisión" || e.target.value === "Documentos Vehiculos") { setRevdisa2(false)  }
+
     }
 
     const saveFalla = async () => {
         const key = v4()
         qfallas += 1;
+        const vehiculo = values.vehiculo
         await google.script.run.withSuccessHandler(resp => {
             setCarga(true)
-        }).saveFalla({ key, id, IVehiculo, DetalleFalla})
+        }).saveFalla({ key, id, IVehiculo, DetalleFalla, vehiculo})
     }
 
-    const saveData = async (e) => {
-        e.preventDefault()
+    const saveData = async () => {
         notificacionGuardando("Guardando EME1");
         saveKM()
-        //saveqfallas()
-        e.target.reset();
          qfallas = 0;
         await google.script.run.withSuccessHandler(resp => {
             notificacionTareaTerminada(resp.titulo, resp.descripcion);
-            //email(id, fechaCreado, creadoPor, vehiculo.value, km.value)
+            history.push("/listaEme1/")
         }).saveEME1(JSON.stringify({ id, fechaCreado, creadoPor, ...values } ));
     }
-
-    /* const email = async (id, fechaCreado, creadoPor, vehiculo, km) => {
-        console.log(id, fechaCreado, creadoPor, vehiculo, km)
-        await google.script.run.withSuccessHandler(res => {
-
-        }).emailSend()
-    } */
 
      const saveKM = async () => {
         await google.script.run.withSuccessHandler(resp => {
@@ -158,9 +159,8 @@ const formEme1 = () => {
                         <span className="form-control" locale="es" >{id}</span>
                     </div>
                 </div>
-                
             </div>
-            <form className="needs-validation" onSubmit={saveData}>
+            {/* <form className="needs-validation" onSubmit={saveData}> */}
                 <div className="card shadow bg-body-tertiary rounded mb-3">
                     <div className="card-header bg-secondary text-white">Datos Generales</div>
                     <div className="card-body">
@@ -307,7 +307,7 @@ const formEme1 = () => {
                     <div className="card-body">
                         <div className="row">
                             <div className="col">
-                                <select className="form-select form-select-sm mb-3" name="IvehiculoApagado" required onChange={checkFalla} disabled={revdisa}>
+                                <select className="form-select form-select-sm mb-3" name="IvehiculoApagado" required onChange={checkFalla} disabled={validaGas}>
                                     <option selected>Revisar</option>
                                     <option value="Comportamiento Motor">Comportamiento Motor</option>
                                     <option value="Dirección">Dirección</option>
@@ -321,7 +321,7 @@ const formEme1 = () => {
                         <div className="row g-2">
                             <div className="col-sm-6 col-md-8">
                                 <select className="form-select form-select-sm mb-3" name="comportamientoMotor" hidden={ivahideM} onChange={checkFalla}>
-                                    <option selected> </option>
+                                    <option value=''>Seleccione</option>
                                     <option value="Nivel de Aceite  de Motor/ Condiciones / Fugas">Falla en Nivel de Aceite  de Motor/ Condiciones / Fugas</option>
                                     <option value="Radiador / Tapa /  Mangueras / Fugas">Falla en Radiador / Tapa /  Mangueras / Fugas</option>
                                     <option value="Envase y Nivel de Refrigerante / Fugas">Falla en Envase y Nivel de Refrigerante / Fugas</option>
@@ -330,19 +330,19 @@ const formEme1 = () => {
                                     <option value="Nivel de Fluido de Frenos / Fugas">Falla en  Nivel de Fluido de Frenos / Fugas</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="direccion" hidden={ivahideD} onChange={checkFalla}>
-                                    <option> </option>
+                                    <option value=''>Seleccione</option>
                                     <option value="Envase / Tapa / Nivel de aceite hidráulico / Fugas">Falla en Envase / Tapa / Nivel de aceite hidráulico / Fugas</option>
                                     <option value="Mangueras y conexiones">Falla en Mangueras y conexiones</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="suspensionCauchos" hidden={ivahidesc} onChange={checkFalla}>
-                                    <option selected> </option>
+                                    <option value=''>Seleccione</option>
                                     <option value="Estado de cauchos y Presion de Aire">Falla en Estado de cauchos y Presion de Aire</option>
                                     <option value="Tuercas Ajustadas y Completas">Falla en Tuercas Ajustadas y Completas</option>
                                     <option value="Amortiguadores / Espirales / Ballestas">Falla en Amortiguadores / Espirales / Ballestas</option>
                                     <option value="Condiciones de Neumáticos">Falla en Condiciones de Neumáticos</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="carroceriaTapiceria" hidden={ivahidect} onChange={checkFalla}>
-                                    <option selected> </option>
+                                    <option value=''>Seleccione</option>
                                     <option value="Faros y Micas Traseras / Delanteras">Falla en Faros y Micas Traseras / Delanteras</option>
                                     <option value="Manillas/Cerraduras/Seguros de Puertas">Falla en Manillas/Cerraduras/Seguros de Puertas</option>
                                     <option value="Vidrio Delantero/Trasero/Ventanas/Retrovisores">Falla en Vidrio Delantero/Trasero/Ventanas/Retrovisores</option>
@@ -351,7 +351,7 @@ const formEme1 = () => {
                                     <option value="Cinturones de seguridad/Repoza Cabezas/Air Bag">Falla en Cinturones de seguridad/Repoza Cabezas/Air Bag</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="herramientasSeguridad" hidden={ivahidesh} onChange={checkFalla}>
-                                    <option selected> </option>
+                                    <option value=''>Seleccione</option>
                                     <option value="DrivePA">Falla en DrivePA</option>
                                     <option value="Extintor / Triangulo de seguridad">Falta de Extintor / Triangulo de seguridad</option>
                                     <option value="Gato / Llave de cruz / Linterna">Falla en Gato / Llave de cruz / Linterna</option>
@@ -372,7 +372,7 @@ const formEme1 = () => {
                     <div className="card-body">
                         <div className="row">
                             <div className="col">
-                                <select className="form-select form-select-sm mb-3" name="IvehiculoEncendido" required onChange={checkFalla} disabled={revdisa}>
+                                <select className="form-select form-select-sm mb-3" name="IvehiculoEncendido" required onChange={checkFalla} disabled={validaGas}>
                                     <option selected>Revisar</option>
                                     <option value="Frenos y Panel de Instrumentos">Frenos y Panel de Instrumentos</option>
                                     <option value="Electrico">Electrico</option>
@@ -386,14 +386,14 @@ const formEme1 = () => {
                         <div className="row g-2">
                             <div className="col-sm-6 col-md-8">
                                 <select className="form-select form-select-sm mb-3" name="frenosPanelInstrumento" hidden={ivahideFPI} onChange={checkFalla}>
-                                    <option selected> </option>
+                                    <option value=''>Seleccione</option>
                                     <option value="Indicadores y Luces de Advertencia en el Tablero">Falla en Indicadores y Luces de Advertencia en el Tablero</option>
                                     <option value="Velocimetro / Tacometro (RPM)">Falla en Velocimetro / Tacometro (RPM)</option>
                                     <option value="Presiones de Aceite y Temperatura Motor">Falla en Presiones de Aceite y Temperatura Motor</option>
                                     <option value="Funcionamiento frenos de Estacionamiento">Falla en Funcionamiento frenos de Estacionamiento</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="electrico" hidden={ivahideElec} onChange={checkFalla}>
-                                    <option selected> </option>
+                                    <option value=''>Seleccione</option>
                                     <option value="Luces/Alta/Baja/Freno/Emenrgencia/Giro/Retroceso">Falla en Luces/Alta/Baja/Freno/Emenrgencia/Giro/Retroceso</option>
                                     <option value="Luz Del Porta Placa Trasero / Tercer Stop">Falla en Luz Del Porta Placa Trasero / Tercer Stop</option>
                                     <option value="Luces internas/Tablero/De techo/Maletero/Adicionales">Falla en Luces internas/Tablero/De techo/Maletero/Adicionales</option>
@@ -407,19 +407,19 @@ const formEme1 = () => {
                                     <option value="Equipo de sonido y Cornetas o Bocinas de Audio">Falla en Equipo de sonido y Cornetas o Bocinas de Audio</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="transmision" hidden={ivahideTrans} onChange={checkFalla}>
-                                    <option selected> </option>
+                                    <option value=''>Seleccione</option>
                                     <option value="Nivel de fluido de transmisión / Fugas">Falla en Nivel de fluido de transmisión / Fugas</option>
                                     <option value="Embrague Nivel de Fluido/Fugas/Recorrido/Aplicación">Falla en Embrague Nivel de Fluido/Fugas/Recorrido/Aplicación</option>
                                     <option value="Palanca de cambios">Falla en Palanca de cambios</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="documentosConductor" hidden={ivahideDocCo} onChange={checkFalla}>
-                                    <option selected> </option>
+                                    <option value=''>Seleccione</option>
                                     <option value="Licencia y Certificado Medico Según Vehiculo">Falla en Licencia y Certificado Medico Según Vehiculo</option>
                                     <option value="Cedula de Identidad/Autirizacion Para Conducir">Falla en Cedula de Identidad/Autirizacion Para Conducir</option>
                                     <option value="CURSO CIP / EVAHC / Llave DrivePA">Falla en CURSO CIP / EVAHC / Llave DrivePA</option>
                                 </select>
                                 <select className="form-select form-select-sm mb-3" name="documentosVehiculo" hidden={ivahideDocVeh} onChange={checkFalla}>
-                                    <option selected> </option>
+                                    <option value=''>Seleccione</option>
                                     <option value="Registro de Vehiculo y Carnet de Circulacion Original">Falla en Registro de Vehiculo y Carnet de Circulacion Original</option>
                                     <option value="Responsabilidad Civil (RCV)">Falla en Responsabilidad Civil (RCV)</option>
                                     <option value="Trimestres">Falla en Trimestres</option>
@@ -427,7 +427,7 @@ const formEme1 = () => {
                                 </select>
                             </div>
                             <div className="col">
-                                <button className='btn btn-block btn-sm text-white' style={{"backgroundColor": bcolor()}} onClick={() => {setCarga(false); saveFalla()}} disabled={revdisa}>{carga ? "Cargar Falla" : "Salvando"}</button></div>
+                                <button className='btn btn-block btn-sm text-white' style={{"backgroundColor": bcolor()}} onClick={() => {setCarga(false); saveFalla()}} disabled={revdisa2}>{carga ? "Cargar Falla" : "Salvando"}</button></div>
                         </div>
                     </div>
                 </div>
@@ -444,10 +444,10 @@ const formEme1 = () => {
                             </div>
                             <div className="col">
                                 <div className="input-group input-group-sm mb-3" >
-                                    <span className="input-group-text">Apto Para Uso</span>
+                                    <span className="input-group-text">Apto Para Uso<p className="text-danger bold fs-5 text">*</p></span>
                                     <div className="ms-2 bg-white border rounded">
                                         <div className="form-check form-check-inline">
-                                            <input className="form-check-input" disabled={ stop === 0 ? true : (stopKm === 0 ? true : false)} type="radio" value="SI" name="vehiculoApto" onChange={checkData} required></input>
+                                            <input className="form-check-input" disabled={ stop === 0 ? true : (stopKm === 0 ? true : false)} type="radio" value="SI" name="vehiculoApto" onChange={checkData}></input>
                                              <label className="form-check-label">SI</label>
                                         </div>
                                         <div className="form-check">
@@ -462,10 +462,10 @@ const formEme1 = () => {
                 </div>
                 <div className="col">
                     <div className="d-grid gap-2">
-                        <button className='btn btn-primary btn-block mb-2' disabled = {disa} >Registrar</button>
+                        <button className='btn btn-primary btn-block mb-2' disabled = {disa} onClick={saveData} >Registrar</button>
                     </div>
                 </div>
-            </form>
+           {/*  </form> */}
         </div>
     )
 }

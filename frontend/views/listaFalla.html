@@ -6,6 +6,16 @@ const listaFalla = () => {
     const { id } = useParams();
     const history = useHistory()
     const [data, setData] = useState([])
+    const [buscaname, setBuscaname] = useState("")
+    const [dataFiltrada, setdataFiltrada] = useState([])
+
+    const [currentPage, setCurrentPage] = useState(1)
+        const recordsPerPage = 10
+        const lastIndex = currentPage * recordsPerPage
+        const firstIndex = lastIndex - recordsPerPage
+        const records = data.slice(firstIndex, lastIndex)
+        const npage = Math.ceil(data.length / recordsPerPage)
+        const numbers = [...Array(npage + 1).keys()].slice(1)
 
     useEffect(listar, [])
 
@@ -14,40 +24,103 @@ const listaFalla = () => {
             const respuest = JSON.parse(res);          
             let arreglo = [];
             respuest.map(data => {
-                if(data.id === id) 
+                if(data.vehiculo === id) 
                  arreglo.push({...data})
             }) 
             setData(arreglo)
-        }).listarFalla();
+            setdataFiltrada(arreglo)
+        }).listarFalla(id);
     }
 
     function back() {
-        if(id) { history.push("/listaEme1"); console.log(id) }
-        else if(!id) {history.push("/listaMantEme1")}
+        history.push("/listaVehiculo")
+        /* if(id) { history.push("/listaEme1");}
+        else if(!id) {history.push("/listaMantEme1")}*/
+    } 
+
+    const Activocolor = (color) => {
+        if(color === ' ') return ('#dc3545')
+        else if(color === 'Si') return ('#198754')
     }
+
+    function nextPage() {
+        if(currentPage !== npage)
+            setCurrentPage(currentPage + 1)
+    }
+
+    function prePage() {
+        if(currentPage !== 1)
+            setCurrentPage(currentPage - 1)
+        }
+
+    function changeCPage(id) {
+        setCurrentPage(id)
+    }
+
+    const funBuscaname = (e) => {
+        setBuscaname(e.target.value)
+        let arreglo = []
+        arreglo = dataFiltrada.filter((data) => data.reparado.toUpperCase().includes(e.target.value.trim().toUpperCase()))
+        if(arreglo.length > 0) {
+            setData(arreglo)
+            
+        }
+   }
 
     return (
         <div className="container-sm rounded shadow" style={{"marginTop": '2rem'}}>
+            <div className="col">
+                <div className="input-group input-group-sm mb-3 w-25">
+                    <span className="input-group-text">Vehiculo</span>
+                    <input type="text" name="searchname" className="form-control" style={{"fontSize": "12px" }} value={id}></input>
+                </div>
+                <div className="input-group input-group-sm mb-3 w-25">
+                    <span className="input-group-text">Filtro Estado Reparado</span>
+                     <input type="text" name="searchname" className="form-control" style={{"fontSize": "12px" }} value={buscaname} onChange={funBuscaname} ></input>
+                </div>
+            </div>
             <table className="table table-striped">
                 <thead>
                     <tr>
                         <th scope="ID">ID</th>
                         <th scope="Fecha Creado">Inspección A</th>
                         <th scope="col">Detalle Falla</th>
+                        <th scope="col">Reparado</th>
+                        <th scope="col">Fecha Reparación</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {data.map((datos) => ( 
+                    {records.map((datos) => ( 
                     <tr key={datos.key}>
                         <td scope="row" >{datos.id}</td>
                         <td scope="row" >{datos.IVehiculo}</td>
                         <td scope="row">{datos.DetalleFalla}</td>
-                        
+                        <td scope="row" ><button className="badge border-0" style={{"backgroundColor": Activocolor(datos.reparado), "fontSize": "12px" }}>{datos.reparado === 'Si' ? '√' : " " }</button></td>
+                        <td scope="row">{dayjs(datos.fecharepacion).format("DD/MM/YYYY")}</td>
                     </tr>
                     ))}
                 </tbody>
           </table>
           <button className='btn btn-primary btn-block mb-2' onClick={()=> {back()}}>Regresar</button>
+          <nav>
+                <ul className="pagination pagination-sm justify-content-md-center">
+                    <li className="page-item">
+                        <a href="#" className="page-link" onClick={prePage}>Ant.</a>
+                    </li>
+                    { 
+                        numbers.map((n, i) => (
+                            <li className={`page-item ${currentPage === n ? 'active' : ''}`}key={i}>
+                                <a href="#" className="page-link" onClick={()=> changeCPage(n)}>
+                                    {n}
+                                </a>
+                            </li>
+                        ))
+                    }
+                    <li className="page-item">
+                        <a href="#" className="page-link" onClick={nextPage}>Sig.</a>
+                    </li>
+                </ul>
+             </nav>
         </div>
     )
 }
